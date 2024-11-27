@@ -1,6 +1,30 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+# Getting Started
+
+## Install Node Packages
+
+```
+npm install
+```
+
+## Docker
+
+```
+docker compose up
+```
+
+## Prisa Database Push
+
+```
+npx prisma db push
+```
+
+## Prisma Studio
+
+```
+npx prisma studio
+```
 
 First, run the development server:
 
