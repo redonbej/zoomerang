@@ -11,7 +11,7 @@ export default function Room() {
 
             <p className='text-[#444746] text-2xl text-center mb-10'>Get in touch with your friends or family by live chatting, sending reactions and collaborating</p>
 
-            <CreateJoinRoomControls></CreateJoinRoomControls>
+            <CreateJoinRoomControls/>
 
         </div>
 
