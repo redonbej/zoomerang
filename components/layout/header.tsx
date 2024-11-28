@@ -1,5 +1,6 @@
 "use client"
 
+import Account from "../authenthication/account";
 import Link from "next/link"
 import {
     NavigationMenu,
@@ -8,7 +9,6 @@ import {
     NavigationMenuList,
     navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
-import { LogInIcon } from "lucide-react"
 
 export function Header() {
     return (
@@ -20,31 +20,23 @@ export function Header() {
                 <NavigationMenu>
                     <NavigationMenuList>
                         <NavigationMenuItem>
-                            <Link href="/login" legacyBehavior passHref>
+                            <Link href="/dashboard" legacyBehavior passHref>
                                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                                    About
+                                    Dashboard
                                 </NavigationMenuLink>
                             </Link>
                         </NavigationMenuItem>
                         <NavigationMenuItem>
-                            <Link href="/register" legacyBehavior passHref>
+                            <Link href="/room" legacyBehavior passHref>
                                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                                    Contact
+                                    Room
                                 </NavigationMenuLink>
                             </Link>
                         </NavigationMenuItem>
                     </NavigationMenuList>
                 </NavigationMenu>
                 <NavigationMenu>
-                    <NavigationMenuList>
-                        <NavigationMenuItem>
-                            <Link href="/register" legacyBehavior passHref>
-                                <NavigationMenuLink className={`${navigationMenuTriggerStyle()} border text-white bg-blue-500 hover:bg-blue-600 hover:text-white gap-2`}>
-                                    <LogInIcon /> Sign up
-                                </NavigationMenuLink>
-                            </Link>
-                        </NavigationMenuItem>
-                    </NavigationMenuList>
+                    <Account />
                 </NavigationMenu>
             </div>
         </div>
