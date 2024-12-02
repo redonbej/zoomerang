@@ -10,17 +10,51 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Here, you would typically handle the sign-up logic (e.g., make API call)
-    console.log('Name:', name, 'Email:', email, 'Password:', password, 'Confirm Password:', confirmPassword);
+    setErrorMessage('');
+    setLoading(true);
+
+    // Basic validation
+    if (password !== confirmPassword) {
+      setErrorMessage('Passwords do not match.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password, confirmPassword }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log('Registration successful:', data);
+        window.location.href = '/login';
+      } else {
+        setErrorMessage(data.message || 'Something went wrong!');
+      }
+    } catch (error) {
+      console.error('Error registering user:', error);
+      setErrorMessage('Server error. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="flex justify-center items-center h-screen bg-gray-50">
       <div className="bg-white p-8 rounded-lg shadow-lg w-96">
         <h2 className="text-2xl font-semibold text-center mb-6">Sign Up</h2>
+        {errorMessage && <p className="text-red-500 text-center mb-4">{errorMessage}</p>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>
@@ -31,7 +65,6 @@ export default function Register() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter your full name"
               className="mt-2 w-full px-4 py-2 border rounded-md"
-              required
             />
           </div>
           
@@ -44,7 +77,6 @@ export default function Register() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               className="mt-2 w-full px-4 py-2 border rounded-md"
-              required
             />
           </div>
 
@@ -57,7 +89,6 @@ export default function Register() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               className="mt-2 w-full px-4 py-2 border rounded-md"
-              required
             />
           </div>
           
@@ -70,15 +101,15 @@ export default function Register() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm your password"
               className="mt-2 w-full px-4 py-2 border rounded-md"
-              required
             />
           </div>
           
           <Button 
             type="submit" 
             className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            disabled={loading}
           >
-            Sign Up
+            {loading ? 'Creating Account...' : 'Sign Up'}
           </Button>
         </form>
         <div className="mt-4 text-center">
