@@ -47,6 +47,7 @@ export default function CreateJoinRoomControls() {
                 </Button>
             </div>
 
+            <div></div>
 
         </div>
     )

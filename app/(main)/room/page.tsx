@@ -13,6 +13,10 @@ export default function Room() {
 
             <CreateJoinRoomControls></CreateJoinRoomControls>
 
+            <div>
+
+            </div>
+
         </div>
 
     </div>
