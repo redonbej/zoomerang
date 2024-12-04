@@ -18,7 +18,7 @@ export default function Register() {
     setErrorMessage('');
     setLoading(true);
 
-    // Basic validation
+    // Basic validation for the app
     if (password !== confirmPassword) {
       setErrorMessage('Passwords do not match.');
       setLoading(false);
