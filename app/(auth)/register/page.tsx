@@ -14,6 +14,8 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
 
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
     if (!showValidation) setShowValidation(true);
@@ -24,14 +26,21 @@ export default function Register() {
   const hasNumber = /[0-9]/.test(password);
   const isMinLength = password.length >= 8;
 
-  // Check if all requirements are met
   const isPasswordValid =
     isLowercase && isUppercase && hasNumber && isMinLength && password === confirmPassword;
+
+  const isEmailValid = emailRegex.test(email);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMessage("");
     setLoading(true);
+
+    if (!isEmailValid) {
+      setErrorMessage("Please enter a valid email address.");
+      setLoading(false);
+      return;
+    }
 
     if (!isPasswordValid) {
       setErrorMessage("Password does not meet the requirements.");
@@ -94,6 +103,9 @@ export default function Register() {
               placeholder="Enter your email"
               className="mt-2 w-full px-4 py-2 border rounded-md"
             />
+            {!isEmailValid && email && (
+              <p className="text-red-500 text-sm">Please enter a valid email address.</p>
+            )}
           </div>
 
           <div className="mb-4">
@@ -111,7 +123,7 @@ export default function Register() {
           </div>
 
           {showValidation && (
-            <div id="message" className="mb-4">
+            <div id="message" className="mb-4 text-sm font-medium">
               <h3>Password must contain the following:</h3>
               <p className={isLowercase ? "text-green-500" : "text-red-500"}>
                 A <b>lowercase</b> letter
@@ -145,7 +157,7 @@ export default function Register() {
           <Button
             type="submit"
             className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            disabled={loading || !isPasswordValid}
+            disabled={loading || !isPasswordValid || !isEmailValid}
           >
             {loading ? "Creating Account..." : "Sign Up"}
           </Button>
