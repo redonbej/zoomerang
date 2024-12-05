@@ -13,6 +13,24 @@ export default function Register() {
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
+
+  const [isLowerCase, setIsLowerCase] = useState(false);
+  const [isUpperCase, setIsUpperCase] = useState(false);
+  const [isNumber, setIsNumber] = useState(false);
+  const [isLengthValid, setIsLengthValid] = useState(false);
+
+  const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPassword(value);
+
+    setIsLowerCase(/[a-z]/.test(value));
+    setIsUpperCase(/[A-Z]/.test(value));
+    setIsNumber(/\d/.test(value));
+    setIsLengthValid(value.length >= 8);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMessage('');
@@ -86,10 +104,27 @@ export default function Register() {
               id="password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handlePasswordChange}
               placeholder="Enter your password"
               className="mt-2 w-full px-4 py-2 border rounded-md"
+              required
+              title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters"
             />
+            <div id="message">
+              <h3>Password must contain the following:</h3>
+              <p id="letter" className={isLowerCase ? "text-green-500" : "text-red-500"}>
+                A <b>lowercase</b> letter
+              </p>
+              <p id="capital" className={isUpperCase ? "text-green-500" : "text-red-500"}>
+                A <b>capital (uppercase)</b> letter
+              </p>
+              <p id="number" className={isNumber ? "text-green-500" : "text-red-500"}>
+                A <b>number</b>
+              </p>
+              <p id="length" className={isLengthValid ? "text-green-500" : "text-red-500"}>
+                Minimum <b>8 characters</b>
+              </p>
+            </div>
           </div>
           
           <div className="mb-6">
@@ -107,7 +142,7 @@ export default function Register() {
           <Button 
             type="submit" 
             className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            disabled={loading}
+            disabled={loading || !(isLowerCase && isUpperCase && isNumber && isLengthValid)}
           >
             {loading ? 'Creating Account...' : 'Sign Up'}
           </Button>
