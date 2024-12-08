@@ -1,14 +1,10 @@
 import React from 'react';
 
-interface ActionButtonsProps {
-    toggleSideChat: () => void;
-}
-
-export default function ActionButtons({ toggleSideChat }: ActionButtonsProps) {
+export default function ActionButtons({ toggleSidePanel }: ActionButtonsProps) {
     return (
         <div className='flex justify-center'>
             <button
-                onClick={toggleSideChat}
+                onClick={toggleSidePanel}
                 className="p-2 bg-blue-500 text-white rounded-md m-4"
             >
                 Toggle SideChat
