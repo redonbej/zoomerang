@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import SideChat from "@/components/chat/sideChat";
+import SidePanel from "@/components/chat/sidePanel";
 import ActionButtons from "@/components/chat/actionButtons";
 
 export default function Home() {
-  const [isSideChatVisible, setIsSideChatVisible] = useState(false);
+  const [isSidePanelVisible, setIsSidePanelVisible] = useState(false);
 
-  const toggleSideChat = () => {
-    setIsSideChatVisible(!isSideChatVisible);
+  const toggleSidePanel = () => {
+    setIsSidePanelVisible(!isSidePanelVisible);
   };
 
   return (
@@ -21,12 +21,12 @@ export default function Home() {
 
       <div
         className={`fixed w-96 top-4 bottom-20 bg-white shadow-lg rounded-md transition-all duration-300
-           ease-in-out ${isSideChatVisible ? "translate-x-0 right-4" : "translate-x-full right-0"}`}
+           ease-in-out ${isSidePanelVisible ? "translate-x-0 right-4" : "translate-x-full right-0"}`}
       >
-        <SideChat />
+        <SidePanel toggleSidePanel={toggleSidePanel}/>
       </div>
       <div className="fixed bottom-0 right-0 w-full bg-zinc-800">
-        <ActionButtons toggleSideChat={toggleSideChat} />
+        <ActionButtons toggleSidePanel={toggleSidePanel} />
       </div>
     </div>
   );
