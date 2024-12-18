@@ -1,19 +1,26 @@
 import { ReactNode } from "react";
 
 export interface ActionButtonsProps {
-    toggleSidePanel: () => void;
+  toggleSidePanel: () => void;
 }
 
 export interface SidePanelTitleProps extends ActionButtonsProps {
-    title: string;
+  title: string;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
 }
 
 export interface AuthContextType {
-    isAuthenticated: boolean;
-    handleLogOut: () => void;
-    logIn: () => void;
+  isAuthenticated: boolean;
+  user: User | null;
+  handleLogOut: () => void;
+  logIn: (userData: User) => void;
 }
 
 export interface AuthProviderProps {
-    children: ReactNode;
+  children: ReactNode;
 }

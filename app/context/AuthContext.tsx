@@ -1,20 +1,36 @@
 "use client";
 
-import { useRouter } from 'next/navigation';
-import { createContext, useState, useEffect, useContext } from 'react';
-import { AuthContextType, AuthProviderProps } from "@/lib/interfaces";
+import { useRouter } from "next/navigation";
+import { createContext, useState, useEffect } from "react";
+import { AuthContextType, AuthProviderProps, User } from "@/lib/interfaces";
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+    const [user, setUser] = useState<User | null>(null);
     const router = useRouter();
 
-    // Check if the user is authenticated on component mount
     useEffect(() => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (token) {
-            setIsAuthenticated(true);
+            const fetchUserData = async () => {
+                const res = await fetch("/api/user", {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    setUser(data);
+                    setIsAuthenticated(true);
+                } else {
+                    setIsAuthenticated(false);
+                }
+            };
+
+            fetchUserData();
         } else {
             setIsAuthenticated(false);
         }
@@ -22,17 +38,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     // Handle log out
     const handleLogOut = () => {
-        localStorage.removeItem('token');
+        localStorage.removeItem("token");
         setIsAuthenticated(false);
+        setUser(null);
         router.push("/login");
     };
 
-    const logIn = () => {
+    // Set user data after login
+    const logIn = (userData: User) => {
         setIsAuthenticated(true);
+        setUser(userData);
     };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, handleLogOut, logIn }}>
+        <AuthContext.Provider value={{ isAuthenticated, user, handleLogOut, logIn }}>
             {children}
         </AuthContext.Provider>
     );

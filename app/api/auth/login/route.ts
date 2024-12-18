@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,7 +10,10 @@ export async function POST(req: NextRequest) {
 
     // Basic validation
     if (!email || !password) {
-      return NextResponse.json({ message: 'Email and password are required.' }, { status: 400 });
+      return NextResponse.json(
+        { message: "Email and password are required." },
+        { status: 400 }
+      );
     }
 
     // Find user by email
@@ -19,28 +22,42 @@ export async function POST(req: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json({ message: 'Invalid email or password.' }, { status: 400 });
+      return NextResponse.json(
+        { message: "Invalid email or password." },
+        { status: 400 }
+      );
     }
 
     // Compare passwords (hashed password in DB)
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      return NextResponse.json({ message: 'Invalid email or password.' }, { status: 400 });
+      return NextResponse.json(
+        { message: "Invalid email or password." },
+        { status: 400 }
+      );
     }
 
     // Create JWT token
     const token = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET as string,
-      { expiresIn: '1h' }
+      { expiresIn: "1h" }
     );
 
-    // Return response with the JWT token
-    return NextResponse.json({ message: 'Login successful', token }, { status: 200 });
-
+    return NextResponse.json(
+      {
+        message: "Login successful",
+        token,
+        user: { id: user.id, name: user.name, email: user.email },
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ message: 'Server error. Please try again later.' }, { status: 500 });
+    return NextResponse.json(
+      { message: "Server error. Please try again later login." },
+      { status: 500 }
+    );
   }
 }
