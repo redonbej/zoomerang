@@ -4,7 +4,7 @@ import {useEffect, useRef, useState} from "react";
 import {Button} from "@/components/ui/button";
 import {v4 as uuid} from "uuid";
 
-const URL_WEB_SOCKET = 'ws://localhost:3001';
+const URL_WEB_SOCKET = 'ws://b35d-2a03-4b80-c300-1cb0-a47a-6820-875-8b9f.ngrok-free.app/';
 
 export default function Room() {
 
@@ -17,26 +17,32 @@ export default function Room() {
             console.log('ws opened');
             ws.current = wsClient;
             joinRoom();
+            setupDevice();
         };
         wsClient.onclose = () => console.log('ws closed');
         wsClient.onmessage = async (message) => {
             console.log('socket got data', message, message.data);
-            if (message.data.answer) {
-                const remoteDesc = new RTCSessionDescription(message.data.answer);
-                await peerConnection.setRemoteDescription(remoteDesc);
-            }
-            if (message.data.offer && waitCall) {
-                peerConnection.setRemoteDescription(new RTCSessionDescription(message.data.offer));
-                const answer = await peerConnection.createAnswer();
-                await peerConnection.setLocalDescription(answer);
-                sendWSMsg({'answer': answer, userId: userId.current})
-            }
-            if (message.data.iceCandidate) {
-                try {
-                    await peerConnection.addIceCandidate(message.data.iceCandidate);
-                } catch (e) {
-                    console.error('Error adding received ice candidate', e);
+            const parsedMessage = JSON.parse(message.data);
+            switch (parsedMessage.type) {
+                case 'joined': {
+                    const body = parsedMessage.body;
+                    console.log('users in this channel', body);
+                    break;
                 }
+                case 'offer_sdp_received': {
+                    const offer = parsedMessage.body;
+                    onAnswer(offer);
+                    break;
+                }
+                case 'answer_sdp_received': {
+                    gotRemoteDescription(parsedMessage.body);
+                    break;
+                }
+                case 'quit': {
+                    break;
+                }
+                default:
+                    break;
             }
         };
         return () => {
@@ -57,16 +63,18 @@ export default function Room() {
 
     async function makeCall() {
         peerConnection = new RTCPeerConnection(configuration);
+        peerConnection.onicecandidate = gotLocalIceCandidateOffer;
+        peerConnection.onaddstream = gotRemoteStream;
+        peerConnection.addStream(localStream);
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
-        sendWSMsg({type: 'send_offer', offer: offer});
-        waitICE();
     }
 
     const setupDevice = () => {
         console.log('setupDevice invoked');
-        navigator.getUserMedia({ audio: true, video: true }, (stream) => {
+        navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then((stream) => {
             // render local stream on DOM
+            console.log('got user stream')
             const localPlayer = document.getElementById('localPlayer') as HTMLVideoElement;
             localPlayer.srcObject = stream;
             localStream = stream;
@@ -75,29 +83,69 @@ export default function Room() {
         });
     };
 
-    const waitForCall = () => {
-        peerConnection = new RTCPeerConnection(configuration);
-        setWaitCall(true);
-        waitICE();
-    }
+    const gotRemoteStream = (event) => {
+        console.log('gotRemoteStream invoked');
+        const remotePlayer = document.getElementById('remotePlayer');
+        remotePlayer.srcObject = event.stream;
+    };
 
-    const waitICE = () => {
-        peerConnection.addEventListener('icecandidate', event => {
-            if (event.candidate) {
-                sendWSMsg({'new-ice-candidate': event.candidate, userId: userId.current});
-            }
-        });
-    }
+    // async function to handle ice candidates
+    const gotLocalIceCandidateOffer = (event) => {
+        console.log('gotLocalIceCandidateOffer invoked', event.candidate, peerConnection.localDescription);
+        // when gathering candidate finished, send complete sdp
+        if (!event.candidate) {
+            const offer = peerConnection.localDescription;
+            // send offer sdp to signaling server via websocket
+            sendWSMsg({type: 'send_offer', sdp: offer});
+        }
+    };
 
     const joinRoom = () => {
         sendWSMsg({type: 'join'});
     }
 
+    const onAnswer = (offer) => {
+        console.log('onAnswer invoked');
+
+        if (localStream.getVideoTracks().length > 0) {
+            console.log(`Using video device: ${localStream.getVideoTracks()[0].label}`);
+        }
+        if (localStream.getAudioTracks().length > 0) {
+            console.log(`Using audio device: ${localStream.getAudioTracks()[0].label}`);
+        }
+        peerConnection = new RTCPeerConnection(configuration);
+        peerConnection.onicecandidate = gotLocalIceCandidateAnswer;
+        peerConnection.onaddstream = gotRemoteStream;
+        peerConnection.addStream(localStream);
+        peerConnection.setRemoteDescription(offer);
+        peerConnection.createAnswer().then(gotAnswerDescription);
+    };
+
+    const gotAnswerDescription = (answer) => {
+        console.log('gotAnswerDescription invoked:', answer);
+        peerConnection.setLocalDescription(answer);
+    };
+
+    const gotLocalIceCandidateAnswer = (event) => {
+        console.log('gotLocalIceCandidateAnswer invoked', event.candidate, peerConnection.localDescription);
+        // gathering candidate finished, send complete sdp
+        if (!event.candidate) {
+            const answer = peerConnection.localDescription;
+            sendWSMsg({type: 'send_answer', sdp: answer});
+        }
+    };
+
+
+const gotRemoteDescription = (answer) => {
+    console.log('gotRemoteDescription invoked:', answer);
+    peerConnection.setRemoteDescription(answer);
+};
+
     return (<>
         {/*<input placeholder="User ID" onchange={(e) => setUserId(e.target.value)} />*/}
         <Button onClick={setupDevice}>Start stream</Button>
         <Button onClick={makeCall}>Make Call</Button>
-        <Button onClick={waitForCall}></Button>
+        {/*<Button onClick={waitForCall}></Button>*/}
         <div className='flex p-2.5'>
             <video
                 id="peerPlayer"
@@ -106,6 +154,11 @@ export default function Room() {
             />
             <video
                 id="localPlayer"
+                autoPlay
+                style={{width: 640, height: 480}}
+            />
+            <video
+                id="remotePlayer"
                 autoPlay
                 style={{width: 640, height: 480}}
             />
