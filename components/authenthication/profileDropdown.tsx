@@ -1,7 +1,7 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { LogOutIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuth } from "@/components/hooks/useAuth";
 import { useRouter } from "next/navigation";
 
 export default function ProfileDropdown() {
