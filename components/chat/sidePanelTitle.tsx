@@ -4,6 +4,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { SidePanelTitleProps } from "@/lib/interfaces";
 import { XIcon } from "lucide-react";
 
 export default function SidePanelTitle({ toggleSidePanel, title }: SidePanelTitleProps) {

@@ -1,3 +1,4 @@
+import { ActionButtonsProps } from "@/lib/interfaces";
 import SidePanelContent from "./sidePanelContent";
 import SidePanelTitle from "./sidePanelTitle";
 

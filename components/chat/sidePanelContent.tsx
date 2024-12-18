@@ -48,7 +48,7 @@ export default function SidePanelContent() {
 
     return (
         <div className="h-full flex flex-col justify-between">
-            <SimpleBar className="flex-1 my-4 px-2 h-[500px]" ref={simpleBarRef}>
+            <SimpleBar className="flex-1 my-4 px-2 max-h-[500px]" ref={simpleBarRef}>
                 <div className="flex flex-col gap-2">
                     {messages.map((msg, index) => (
                         <div

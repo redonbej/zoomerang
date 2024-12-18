@@ -1,3 +1,4 @@
+import { ActionButtonsProps } from '@/lib/interfaces';
 import React from 'react';
 
 export default function ActionButtons({ toggleSidePanel }: ActionButtonsProps) {
