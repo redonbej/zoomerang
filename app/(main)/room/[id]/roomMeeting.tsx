@@ -5,7 +5,7 @@ import {useEffect, useRef} from "react";
 import {v4 as uuid} from "uuid";
 import {Button} from "@/components/ui/button";
 
-const URL_WEB_SOCKET = 'ws://b35d-2a03-4b80-c300-1cb0-a47a-6820-875-8b9f.ngrok-free.app/';
+const URL_WEB_SOCKET = 'https://24c0-2a03-4b80-c300-1cb0-6141-bdfc-847e-168e.ngrok-free.app/';
 
 
 export default function RoomMeeting(props: {id: string}) {
@@ -88,7 +88,8 @@ export default function RoomMeeting(props: {id: string}) {
     const gotRemoteStream = (event) => {
         console.log('gotRemoteStream invoked');
         const remotePlayer = document.getElementById('remotePlayer');
-        remotePlayer.srcObject = event.stream;
+        if (event.stream)
+            remotePlayer.srcObject = event.stream;
     };
 
     // async function to handle ice candidates
