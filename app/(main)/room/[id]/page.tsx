@@ -3,11 +3,13 @@
 import {useEffect, useRef, useState} from "react";
 import {Button} from "@/components/ui/button";
 import {v4 as uuid} from "uuid";
+import {useParams} from "next/navigation";
 
 const URL_WEB_SOCKET = 'ws://b35d-2a03-4b80-c300-1cb0-a47a-6820-875-8b9f.ngrok-free.app/';
 
 export default function Room() {
 
+    const params = useParams<{ id: string }>();
     const userId = useRef(uuid());
     const ws = useRef({} as any);
 
@@ -52,7 +54,7 @@ export default function Room() {
 
     const sendWSMsg = (data) => {
         console.log('socket send message', data);
-        ws.current.send(JSON.stringify({channelName: '1', userId: userId.current, ...data}));
+        ws.current.send(JSON.stringify({channelName: params.id, userId: userId.current, ...data}));
     };
 
     const [waitCall, setWaitCall] = useState(false);
