@@ -20,7 +20,7 @@ export default async function Room({params}: { params: Promise<any> }) {
     console.log('room is', room)
 
     if (!room) {
-        notFound();
+        //notFound();
     }
 
     return (<>

@@ -1,21 +1,66 @@
 'use client';
 
 import {useParams} from "next/navigation";
-import {useEffect, useRef} from "react";
+import {useEffect, useRef, useState} from "react";
 import {v4 as uuid} from "uuid";
 import {Button} from "@/components/ui/button";
+import {LoadingSpinner} from "@/components/ui/spinner";
 
-const URL_WEB_SOCKET = 'https://24c0-2a03-4b80-c300-1cb0-6141-bdfc-847e-168e.ngrok-free.app/';
-
+const URL_WEB_SOCKET = 'ws://localhost:3001';
 
 export default function RoomMeeting(props: {id: string}) {
 
-    console.log(props);
-
+    const [granted, setGranted] = useState(null);
     const userId = useRef(uuid());
     const ws = useRef({} as any);
 
-    useEffect(() => {
+    const handlePermissions = async ():Promise<'granted' | any> => {
+        try {
+            const camResult = await navigator.permissions.query({ name: "camera" });
+            const miceResult = await navigator.permissions.query({ name: "microphone" });
+            camResult.onchange = () => {
+                console.log(camResult)
+                handlePermissions();
+            };
+            miceResult.onchange = () => {
+                console.log(miceResult)
+                handlePermissions();
+            };
+            console.log(camResult, miceResult);
+            if (camResult.state === 'granted' && miceResult.state === 'granted') {
+                setGranted('granted')
+                console.log('granted');
+                startSocket();
+
+            } else if (camResult.state === 'prompt' || miceResult.state === 'prompt') {
+                setGranted('prompt')
+                console.log('prompt')
+            } else {
+                setGranted('denied')
+                console.log('denied')
+                ws.current?.close?.();
+            }
+
+        } catch (error) {
+            console.log(error);
+            setGranted('denied')
+            console.log('denied')
+            ws.current?.close?.();
+        }
+
+    }
+
+    useEffect(()=>{
+        navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(res => {
+
+        }).catch(() => {});
+        (async () => {
+            await handlePermissions();
+            console.log(granted)
+        })();
+    }, [])
+
+    const startSocket = () => {
         const wsClient = new WebSocket(URL_WEB_SOCKET);
         wsClient.onopen = () => {
             console.log('ws opened');
@@ -52,7 +97,7 @@ export default function RoomMeeting(props: {id: string}) {
         return () => {
             wsClient.close();
         };
-    }, []);
+    }
 
     const sendWSMsg = (data) => {
         console.log('socket send message', data);
@@ -143,6 +188,38 @@ export default function RoomMeeting(props: {id: string}) {
         console.log('gotRemoteDescription invoked:', answer);
         peerConnection.setRemoteDescription(answer);
     };
+
+    if (!granted) {
+        return (
+            <div className='w-full h-full flex items-center justify-center'>
+                <div>
+                    <p className='text-center font-semibold'>Loading</p>
+                    <LoadingSpinner style={{width: '400px', height: '400px'}}>this is Loading</LoadingSpinner>
+                </div>
+            </div>
+        )
+    }
+
+    if (granted === 'denied') {
+        return (
+            <div className="fixed bg-black/50 h-full w-full flex items-center justify-center">
+                <div className='max-w-[400px] p-5 rounded-2xl shadow bg-white'>
+                    This app needs Camera and Microphone Permissions in order to function properly. Please enable them and app will resume working
+                </div>
+            </div>
+        )
+    }
+
+    if (granted === 'prompt') {
+        return (
+            <div className="fixed bg-black/50 h-full w-full flex items-center justify-center">
+                <div className='max-w-[400px] p-5 rounded-2xl shadow bg-white'>
+                    Please accept the Permissions from the browser
+                </div>
+            </div>
+        )
+    }
+
 
     return (<>
         {/*<input placeholder="User ID" onchange={(e) => setUserId(e.target.value)} />*/}
