@@ -1,19 +1,14 @@
 import { AuthProvider } from './context/AuthContext';
 import type { Metadata } from 'next';
 import { Header } from '@/components/layout/header';
-import localFont from 'next/font/local';
+import { Inter } from 'next/font/google';
 import './globals.css';
-import {Toaster} from "@/components/ui/sonner";
+import { Toaster } from '@/components/ui/sonner';
 
-const geistSans = localFont({
-  src: './fonts/GeistVF.woff',
-  variable: '--font-geist-sans',
-  weight: '100 900',
-});
-const geistMono = localFont({
-  src: './fonts/GeistMonoVF.woff',
-  variable: '--font-geist-mono',
-  weight: '100 900',
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
 });
 
 export const metadata: Metadata = {
@@ -28,12 +23,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col h-screen`}>
+      <body className={`${inter.variable} antialiased flex flex-col h-screen`}>
         <AuthProvider>
           <Header />
-          <div className="flex-1">
-            {children}
-          </div>
+          <div className="flex-1">{children}</div>
         </AuthProvider>
         <Toaster />
       </body>
