@@ -32,3 +32,11 @@ export interface IUserService {
   updateUser(id: string, user: Partial<User>): Promise<User | null>;
   deleteUser(id: string): Promise<void>;
 }
+
+export interface IRepository<T> {
+  findById(id: string): Promise<T | null>;
+  findAll(): Promise<T[]>;
+  create(entity: T): Promise<T>;
+  update(id: string, entity: Partial<T>): Promise<T | null>;
+  delete(id: string): Promise<void>;
+}
