@@ -40,3 +40,9 @@ export interface IRepository<T> {
   update(id: string, entity: Partial<T>): Promise<T | null>;
   delete(id: string): Promise<void>;
 }
+
+export abstract class AuthService {
+  abstract login(email: string, password: string): Promise<string>;
+  abstract register(user: User): Promise<void>;
+  abstract verifyToken(token: string): Promise<User | null>;
+}
