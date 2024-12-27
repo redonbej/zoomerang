@@ -109,7 +109,7 @@ export default function RoomMeeting(props: {id: string}) {
                     if (!leftUser)
                         return;
 
-                    leftUser.peerConnection.close();
+                    leftUser.peerConnection?.close();
                     roomUserClient = roomUserClient.filter(user => user.id !== leftUserId);
                     setRoomUsers([...roomUserClient]);
                     console.log(`Removed user: ${leftUserId} from Room: ${props.id}`)
@@ -161,7 +161,7 @@ export default function RoomMeeting(props: {id: string}) {
                 sendWSMsg({type: 'send_offer', sdp: offer, offerToUserId: joinedUser.id});
             }
         };;
-        joinedUser.peerConnection.onaddstream = gotRemoteStream;
+        joinedUser.peerConnection.onaddstream = (event) => gotRemoteStream(event, joinedUser);
         joinedUser.peerConnection.addStream(localStream);
         const offer = await joinedUser.peerConnection.createOffer();
         await joinedUser.peerConnection.setLocalDescription(offer);
@@ -180,11 +180,15 @@ export default function RoomMeeting(props: {id: string}) {
         });
     };
 
-    const gotRemoteStream = (event) => {
-        console.log('gotRemoteStream invoked');
-        const remotePlayer = document.getElementById('remotePlayer');
-        if (event.stream)
+    const gotRemoteStream = (event, user: RoomUserClient) => {
+        console.log(`Setting remote stream for ${user.id}`);
+        const remotePlayer = document.getElementById(`${user.id}video`);
+        if (event.stream) {
             remotePlayer.srcObject = event.stream;
+        } else {
+            console.log('too soon, reinvoke');
+            setTimeout(() => gotRemoteStream(event, user), 2000);
+        }
     };
 
     const joinRoom = () => {
@@ -202,7 +206,7 @@ export default function RoomMeeting(props: {id: string}) {
                 sendWSMsg({type: 'send_answer', sdp: answer, answerToUserId: callerUser.id});
             }
         };
-        callerUser.peerConnection.onaddstream = gotRemoteStream;
+        callerUser.peerConnection.onaddstream = (event) => gotRemoteStream(event, callerUser);
         callerUser.peerConnection.addStream(localStream);
         callerUser.peerConnection.setRemoteDescription(sdpOffer);
         callerUser.peerConnection.createAnswer().then(answer => {
@@ -243,23 +247,24 @@ export default function RoomMeeting(props: {id: string}) {
 
 
     return (<>
-        user id {userId.current}
-        <div className='flex p-2.5'>
-            <video
-                id="peerPlayer"
-                autoPlay
-                style={{width: 640, height: 480}}
-            />
-            <video
-                id="localPlayer"
-                autoPlay
-                style={{width: 640, height: 480}}
-            />
-            <video
-                id="remotePlayer"
-                autoPlay
-                style={{width: 640, height: 480}}
-            />
+        <div className='h-full w-full p-2.5 flex flex-col'>
+            <h3 className='text-xl font-semibold'>Connected User: {userId.current}</h3>
+
+            <div className='mt-10 flex flex-col items-center'>
+                <p className='text-center'>My Stream</p>
+                <video id="localPlayer" autoPlay style={{width: 640, height: 480}}/>
+            </div>
+
+            <div className='flex flex-1 overflow-auto'>
+                {
+                    roomUsers.map((roomUser: RoomUserClient) => (
+                        <div key={roomUser.id}>
+                            <p>User: {roomUser.id}</p>
+                            <video id={roomUser.id + 'video'} autoPlay style={{height: '240px'}} className='mr-10'></video>
+                        </div>
+                    ))
+                }
+            </div>
         </div>
     </>)
 

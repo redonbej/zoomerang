@@ -64,16 +64,7 @@ const onMessage = (wss, socket, message) => {
             if (!foundRoom)
                 return;
 
-            foundRoom.users = foundRoom.users.filter(user => user.id !== userId);
-
-            //possibility to delete room if no users are there;
-            if (!foundRoom.users.length)
-                rooms.splice(rooms.findIndex(room => room.id === foundRoom.id), 1);
-            else {
-                foundRoom.users.forEach(user => {
-                    send(user.socket, 'left', {userId})
-                })
-            }
+            quit(foundRoom, userId);
 
             break;
         }
@@ -122,10 +113,11 @@ const onMessage = (wss, socket, message) => {
 function onClose(wss, socket, message) {
     console.log('onClose', message);
     for (const room of rooms) {
-        const index = room.users.findIndex(user => user.socket['uuid'] === socket['uuid']);
+        const index = room.users.findIndex(user => user.socket['__uuid'] === socket['__uuid']);
         if (index != null) {
-            console.log('removed user', room.users[index].id)
-            room.users.splice(index, 1);
+            console.log('removed user', room.users[index].id);
+            quit(room, room.users[index].id);
+            //room.users.splice(index, 1);
             break;
         }
     }
@@ -143,4 +135,17 @@ export class Room {
 export interface RoomUser {
     id: string;
     socket: WebSocket;
+}
+
+const quit = (room: Room, userId: string) => {
+    room.users = room.users.filter(user => user.id !== userId);
+
+    //possibility to delete room if no users are there;
+    if (!room.users.length)
+        rooms.splice(rooms.findIndex(room => room.id === room.id), 1);
+    else {
+        room.users.forEach(user => {
+            send(user.socket, 'left', {userId})
+        })
+    }
 }

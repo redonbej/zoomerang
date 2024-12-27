@@ -66,15 +66,7 @@ var onMessage = function (wss, socket, message) {
         case 'quit': {
             if (!foundRoom)
                 return;
-            foundRoom.users = foundRoom.users.filter(function (user) { return user.id !== userId; });
-            //possibility to delete room if no users are there;
-            if (!foundRoom.users.length)
-                rooms.splice(rooms.findIndex(function (room) { return room.id === foundRoom.id; }), 1);
-            else {
-                foundRoom.users.forEach(function (user) {
-                    send(user.socket, 'left', { userId: userId });
-                });
-            }
+            quit(foundRoom, userId);
             break;
         }
         case 'send_offer': {
@@ -113,10 +105,11 @@ function onClose(wss, socket, message) {
     console.log('onClose', message);
     for (var _i = 0, rooms_1 = rooms; _i < rooms_1.length; _i++) {
         var room = rooms_1[_i];
-        var index = room.users.findIndex(function (user) { return user.socket['uuid'] === socket['uuid']; });
+        var index = room.users.findIndex(function (user) { return user.socket['__uuid'] === socket['__uuid']; });
         if (index != null) {
             console.log('removed user', room.users[index].id);
-            room.users.splice(index, 1);
+            quit(room, room.users[index].id);
+            //room.users.splice(index, 1);
             break;
         }
     }
@@ -130,3 +123,14 @@ var Room = /** @class */ (function () {
     return Room;
 }());
 exports.Room = Room;
+var quit = function (room, userId) {
+    room.users = room.users.filter(function (user) { return user.id !== userId; });
+    //possibility to delete room if no users are there;
+    if (!room.users.length)
+        rooms.splice(rooms.findIndex(function (room) { return room.id === room.id; }), 1);
+    else {
+        room.users.forEach(function (user) {
+            send(user.socket, 'left', { userId: userId });
+        });
+    }
+};
