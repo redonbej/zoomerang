@@ -24,7 +24,6 @@ export default function CreateJoinRoomControls() {
     }
 
     const textChange = (text: string) => {
-        console.log(text);
         setText(text);
         if (!text?.trim()) {
             setJoinDisabled(true);

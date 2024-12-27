@@ -1,29 +1,35 @@
 'use client';
 
-import {useParams} from "next/navigation";
 import {useEffect, useRef, useState} from "react";
 import {v4 as uuid} from "uuid";
-import {Button} from "@/components/ui/button";
 import {LoadingSpinner} from "@/components/ui/spinner";
+import {RoomUserClient} from "@/app/(main)/room/[id]/roomUserClient";
 
 const URL_WEB_SOCKET = 'ws://localhost:3001';
+const configuration = {};//{'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]};
+let roomUserClient: RoomUserClient [] = [];
 
 export default function RoomMeeting(props: {id: string}) {
 
+    const [roomUsers, setRoomUsers] = useState<RoomUserClient []>([]);
     const [granted, setGranted] = useState(null);
     const userId = useRef(uuid());
     const ws = useRef({} as any);
+
+    useEffect(() => {
+        console.log(roomUsers);
+    }, [roomUsers]);
 
     const handlePermissions = async ():Promise<'granted' | any> => {
         try {
             const camResult = await navigator.permissions.query({ name: "camera" });
             const miceResult = await navigator.permissions.query({ name: "microphone" });
             camResult.onchange = () => {
-                console.log(camResult)
+                console.log('on change camera: ',camResult)
                 handlePermissions();
             };
             miceResult.onchange = () => {
-                console.log(miceResult)
+                console.log('on change mice:', miceResult)
                 handlePermissions();
             };
             console.log(camResult, miceResult);
@@ -50,7 +56,7 @@ export default function RoomMeeting(props: {id: string}) {
 
     }
 
-    useEffect(()=>{
+    useEffect(()=> {
         navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(res => {
 
         }).catch(() => {});
@@ -61,30 +67,68 @@ export default function RoomMeeting(props: {id: string}) {
     }, [])
 
     const startSocket = () => {
+        roomUserClient = [];
         const wsClient = new WebSocket(URL_WEB_SOCKET);
         wsClient.onopen = () => {
-            console.log('ws opened');
+            console.log('Socket opened');
             ws.current = wsClient;
             joinRoom();
             setupDevice();
         };
         wsClient.onclose = () => console.log('ws closed');
         wsClient.onmessage = async (message) => {
-            console.log('socket got data', message, message.data);
+            //console.log('socket got data', message.data);
             const parsedMessage = JSON.parse(message.data);
             switch (parsedMessage.type) {
                 case 'joined': {
-                    const body = parsedMessage.body;
-                    console.log('users in this channel', body);
+                    const newJoinedUserId = parsedMessage.userId;
+                    const allUsersId = parsedMessage.users.filter(id => id !== userId.current);
+                    console.log('my room users', roomUserClient)
+                    if (!roomUserClient.length) {
+                        roomUserClient = allUsersId.map(id => ({id: id, peerConnection: null}));
+                        console.log('adding users', roomUserClient);
+                        setRoomUsers(roomUserClient)
+                    }
+                    if (userId.current === newJoinedUserId)
+                        return;
+                    const newJoinedUser = roomUserClient.find(user => user.id === newJoinedUserId);
+                    if (newJoinedUser) {
+                        makeCall(newJoinedUser)
+                    } else {
+                        const newUser = {id: newJoinedUserId, peerConnection: null};
+                        roomUserClient.push(newUser)
+                        makeCall(newUser)
+                        setRoomUsers([...roomUserClient]);
+                    }
+                    console.log(roomUserClient)
+                    break;
+                }
+                case 'left': {
+                    const leftUserId = parsedMessage.userId;
+                    const leftUser = roomUserClient.find(user => user.id === leftUserId);
+                    if (!leftUser)
+                        return;
+
+                    leftUser.peerConnection.close();
+                    roomUserClient = roomUserClient.filter(user => user.id !== leftUserId);
+                    setRoomUsers([...roomUserClient]);
+                    console.log(`Removed user: ${leftUserId} from Room: ${props.id}`)
                     break;
                 }
                 case 'offer_sdp_received': {
-                    const offer = parsedMessage.body;
-                    onAnswer(offer);
+                    const {sdp, userId} = parsedMessage;
+                    console.log('offer sdp back, msg', parsedMessage)
+                    const callerUser = roomUserClient.find(user => user.id === userId);
+                    console.log(callerUser);
+                    onAnswer(callerUser, sdp);
                     break;
                 }
-                case 'answer_sdp_received': {
-                    gotRemoteDescription(parsedMessage.body);
+                case 'answer_sdp': {
+                    const {sdp, userId} = parsedMessage;
+                    console.log('userId', userId, roomUserClient)
+                    const user = roomUserClient.find(user => user.id === userId);
+                    console.log('Answer SDP:', sdp);
+                    user.peerConnection.setRemoteDescription(sdp);
                     break;
                 }
                 case 'quit': {
@@ -100,21 +144,27 @@ export default function RoomMeeting(props: {id: string}) {
     }
 
     const sendWSMsg = (data) => {
-        console.log('socket send message', data);
-        ws.current.send(JSON.stringify({channelName: props.id, userId: userId.current, ...data}));
+        console.log('socket send message', data, 'my id:', userId.current);
+        ws.current.send(JSON.stringify({roomId: props.id, userId: userId.current, ...data}));
     };
 
     let localStream;
-    let peerConnection;
-    const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]}
 
-    async function makeCall() {
-        peerConnection = new RTCPeerConnection(configuration);
-        peerConnection.onicecandidate = gotLocalIceCandidateOffer;
-        peerConnection.onaddstream = gotRemoteStream;
-        peerConnection.addStream(localStream);
-        const offer = await peerConnection.createOffer();
-        await peerConnection.setLocalDescription(offer);
+
+    async function makeCall(joinedUser: RoomUserClient) {
+        joinedUser.peerConnection = new RTCPeerConnection(configuration);
+        joinedUser.peerConnection.onicecandidate = (event) => {
+            //console.log('ICE Candidate Offer', event.candidate, joinedUser.peerConnection.localDescription);
+
+            if (!event.candidate) {
+                const offer = joinedUser.peerConnection.localDescription;
+                sendWSMsg({type: 'send_offer', sdp: offer, offerToUserId: joinedUser.id});
+            }
+        };;
+        joinedUser.peerConnection.onaddstream = gotRemoteStream;
+        joinedUser.peerConnection.addStream(localStream);
+        const offer = await joinedUser.peerConnection.createOffer();
+        await joinedUser.peerConnection.setLocalDescription(offer);
     }
 
     const setupDevice = () => {
@@ -137,56 +187,27 @@ export default function RoomMeeting(props: {id: string}) {
             remotePlayer.srcObject = event.stream;
     };
 
-    // async function to handle ice candidates
-    const gotLocalIceCandidateOffer = (event) => {
-        console.log('gotLocalIceCandidateOffer invoked', event.candidate, peerConnection.localDescription);
-        // when gathering candidate finished, send complete sdp
-        if (!event.candidate) {
-            const offer = peerConnection.localDescription;
-            // send offer sdp to signaling server via websocket
-            sendWSMsg({type: 'send_offer', sdp: offer});
-        }
-    };
-
     const joinRoom = () => {
         sendWSMsg({type: 'join'});
     }
 
-    const onAnswer = (offer) => {
-        console.log('onAnswer invoked');
+    const onAnswer = (callerUser: RoomUserClient, sdpOffer) => {
+        console.log('Answering Offer');
 
-        if (localStream.getVideoTracks().length > 0) {
-            console.log(`Using video device: ${localStream.getVideoTracks()[0].label}`);
-        }
-        if (localStream.getAudioTracks().length > 0) {
-            console.log(`Using audio device: ${localStream.getAudioTracks()[0].label}`);
-        }
-        peerConnection = new RTCPeerConnection(configuration);
-        peerConnection.onicecandidate = gotLocalIceCandidateAnswer;
-        peerConnection.onaddstream = gotRemoteStream;
-        peerConnection.addStream(localStream);
-        peerConnection.setRemoteDescription(offer);
-        peerConnection.createAnswer().then(gotAnswerDescription);
-    };
-
-    const gotAnswerDescription = (answer) => {
-        console.log('gotAnswerDescription invoked:', answer);
-        peerConnection.setLocalDescription(answer);
-    };
-
-    const gotLocalIceCandidateAnswer = (event) => {
-        console.log('gotLocalIceCandidateAnswer invoked', event.candidate, peerConnection.localDescription);
-        // gathering candidate finished, send complete sdp
-        if (!event.candidate) {
-            const answer = peerConnection.localDescription;
-            sendWSMsg({type: 'send_answer', sdp: answer});
-        }
-    };
-
-
-    const gotRemoteDescription = (answer) => {
-        console.log('gotRemoteDescription invoked:', answer);
-        peerConnection.setRemoteDescription(answer);
+        callerUser.peerConnection = new RTCPeerConnection(configuration);
+        callerUser.peerConnection.onicecandidate = (event) => {
+            //console.log('ICE Candidate Answer', event.candidate, callerUser.peerConnection.localDescription);
+            if (!event.candidate) {
+                const answer = callerUser.peerConnection.localDescription;
+                sendWSMsg({type: 'send_answer', sdp: answer, answerToUserId: callerUser.id});
+            }
+        };
+        callerUser.peerConnection.onaddstream = gotRemoteStream;
+        callerUser.peerConnection.addStream(localStream);
+        callerUser.peerConnection.setRemoteDescription(sdpOffer);
+        callerUser.peerConnection.createAnswer().then(answer => {
+            callerUser.peerConnection.setLocalDescription(answer);
+        });
     };
 
     if (!granted) {
@@ -222,10 +243,7 @@ export default function RoomMeeting(props: {id: string}) {
 
 
     return (<>
-        {/*<input placeholder="User ID" onchange={(e) => setUserId(e.target.value)} />*/}
-        <Button onClick={setupDevice}>Start stream</Button>
-        <Button onClick={makeCall}>Make Call</Button>
-        {/*<Button onClick={waitForCall}></Button>*/}
+        user id {userId.current}
         <div className='flex p-2.5'>
             <video
                 id="peerPlayer"
