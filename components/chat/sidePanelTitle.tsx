@@ -7,7 +7,7 @@ import {
 import { SidePanelTitleProps } from "@/lib/interfaces";
 import { XIcon } from "lucide-react";
 
-export default function SidePanelTitle({ toggleSidePanel, title }: SidePanelTitleProps) {
+export default function SidePanelTitle({ toggleSidePanel, title }: Partial<SidePanelTitleProps>) {
     return (
         <div className="flex justify-between items-center">
             <h1 className="text-lg text-gray-800">{title}</h1>

@@ -3,10 +3,10 @@ import { Textarea } from "../ui/textarea";
 import { useRef, useState, useEffect } from "react";
 import SimpleBar from "simplebar-react";
 import 'simplebar-react/dist/simplebar.min.css';
+import {ActionButtonsProps} from "@/lib/interfaces";
 
-export default function SidePanelContent() {
+export default function SidePanelContent({ toggleSidePanel, setMessages, messages, onMessageSend }: ActionButtonsProps) {
     const [hasText, setHasText] = useState(false);
-    const [messages, setMessages] = useState<string[]>([]);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const simpleBarRef = useRef<any>(null);
 
@@ -24,10 +24,11 @@ export default function SidePanelContent() {
         if (textarea) {
             const message = textarea.value.trim();
             if (message) {
-                setMessages((prevMessages) => [...prevMessages, message]);
+                //setMessages((prevMessages) => [...prevMessages, message]);
                 textarea.value = "";
                 textarea.style.height = "auto";
                 setHasText(false);
+                onMessageSend(message);
             }
         }
     };
@@ -51,11 +52,15 @@ export default function SidePanelContent() {
             <SimpleBar className="flex-1 my-4 px-2 max-h-[500px]" ref={simpleBarRef}>
                 <div className="flex flex-col gap-2">
                     {messages.map((msg, index) => (
-                        <div
-                            key={index}
-                            className="bg-blue-500 w-fit break-all whitespace-pre-wrap text-white px-2 py-1 rounded-md text-sm"
-                        >
-                            {msg}
+                        <div key={index}>
+                            <p className={`font-semibold text-base mb-2`}>{msg.user.id}
+                                <span className={`font-normal ml-2`}>
+                                    {msg.date?.toLocaleDateString()}
+                                </span>
+                            </p>
+                            <div className="bg-blue-500 w-fit break-all whitespace-pre-wrap text-white px-2 py-1 rounded-md text-sm">
+                                {msg.message}
+                            </div>
                         </div>
                     ))}
                 </div>

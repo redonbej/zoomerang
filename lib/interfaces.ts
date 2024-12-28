@@ -2,6 +2,15 @@ import { ReactNode } from "react";
 
 export interface ActionButtonsProps {
   toggleSidePanel: () => void;
+  messages: SocketMessage [];
+  setMessages: (messages: SocketMessage [] | any) => any;
+  onMessageSend: (message: string) => void;
+}
+
+export interface SocketMessage {
+  message: string;
+  user: Partial<User>;
+  date: Date;
 }
 
 export interface SidePanelTitleProps extends ActionButtonsProps {

@@ -96,6 +96,16 @@ var onMessage = function (wss, socket, message) {
             otherUsers.forEach(function (user) {
                 send(user.socket, 'ice_candidate_received', { candidate: candidate_1, userId: userId });
             });
+            break;
+        }
+        case 'message_send': {
+            if (!foundRoom)
+                return;
+            var message_1 = body.message;
+            foundRoom.users.filter(function (user) { return user.id !== userId.id; }).forEach(function (user) {
+                send(user.socket, 'message_received', { senderId: userId, message: message_1 });
+            });
+            break;
         }
         default:
             break;

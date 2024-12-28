@@ -105,6 +105,17 @@ const onMessage = (wss, socket, message) => {
                 send(user.socket, 'ice_candidate_received', {candidate, userId})
             });
 
+            break;
+        }
+        case 'message_send': {
+            if (!foundRoom)
+                return;
+
+            const message = body.message;
+            foundRoom.users.filter(user => user.id !== userId.id).forEach(user => {
+                send(user.socket, 'message_received', {senderId: userId, message})
+            });
+            break
         }
         default:
             break;

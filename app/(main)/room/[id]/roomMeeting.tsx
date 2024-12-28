@@ -4,6 +4,9 @@ import {useEffect, useRef, useState} from "react";
 import {v4 as uuid} from "uuid";
 import {LoadingSpinner} from "@/components/ui/spinner";
 import {RoomUserClient} from "@/app/(main)/room/[id]/roomUserClient";
+import SidePanel from "@/components/chat/sidePanel";
+import ActionButtons from "@/components/chat/actionButtons";
+import {SocketMessage} from "@/lib/interfaces";
 
 const URL_WEB_SOCKET = 'ws://localhost:3001';
 const configuration = {};//{'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]};
@@ -15,6 +18,22 @@ export default function RoomMeeting(props: {id: string}) {
     const [granted, setGranted] = useState(null);
     const userId = useRef(uuid());
     const ws = useRef({} as any);
+    const [isSidePanelVisible, setIsSidePanelVisible] = useState(false);
+    const [messages, setMessages] = useState<SocketMessage []>([]);
+
+    const onMessageSend = (message: string) => {
+        console.log(message)
+        sendWSMsg({type: 'message_send', message: message});
+        setMessages((prevMessages) => [...prevMessages, {message: message, user: {id: userId.current}, date: new Date()}]);
+    }
+
+    useEffect(() => {
+        console.log(messages);
+    }, [messages]);
+
+    const toggleSidePanel = () => {
+        setIsSidePanelVisible(!isSidePanelVisible);
+    };
 
     useEffect(() => {
         console.log(roomUsers);
@@ -129,6 +148,13 @@ export default function RoomMeeting(props: {id: string}) {
                     const user = roomUserClient.find(user => user.id === userId);
                     console.log('Answer SDP:', sdp);
                     user.peerConnection.setRemoteDescription(sdp);
+                    break;
+                }
+                case 'message_received': {
+                    const {message, senderId} = parsedMessage;
+                    if (userId.current === senderId)
+                        return;
+                    setMessages((prevMessages) => [...prevMessages, {message: message, user: {id: senderId}, date: new Date()}]);
                     break;
                 }
                 case 'quit': {
@@ -264,6 +290,16 @@ export default function RoomMeeting(props: {id: string}) {
                         </div>
                     ))
                 }
+            </div>
+            <div className={`fixed right-[20px] bottom-[20px]`}>
+                <ActionButtons toggleSidePanel={toggleSidePanel}/>
+            </div>
+
+            <div
+                className={`fixed w-96 top-4 bottom-20 bg-white shadow-lg rounded-md transition-all duration-300
+           ease-in-out ${isSidePanelVisible ? "translate-x-0 right-4" : "translate-x-full right-0"}`}
+            >
+                <SidePanel toggleSidePanel={toggleSidePanel} messages={messages} setMessages={setMessages} onMessageSend={onMessageSend}/>
             </div>
         </div>
     </>)
