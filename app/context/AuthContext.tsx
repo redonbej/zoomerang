@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { createContext, useState, useEffect } from "react";
+import axiosInstance from "@/lib/interceptor";
 import { AuthContextType, AuthProviderProps, User } from "@/lib/interfaces";
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -15,17 +16,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         const token = localStorage.getItem("token");
         if (token) {
             const fetchUserData = async () => {
-                const res = await fetch("/api/user", {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
+                try {
+                    const { data } = await axiosInstance.get("/user");
                     setUser(data);
                     setIsAuthenticated(true);
-                } else {
+                } catch (error) {
                     setIsAuthenticated(false);
                 }
             };
