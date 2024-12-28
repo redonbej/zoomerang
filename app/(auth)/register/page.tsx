@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import axios from "axios";
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -49,23 +50,24 @@ export default function Register() {
     }
 
     try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name, email, password, confirmPassword }),
+      const response = await axios.post("/api/auth/register", {
+        name,
+        email,
+        password,
+        confirmPassword,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (response.status === 201) {
         window.location.href = "/login";
       } else {
-        setErrorMessage(data.message || "Something went wrong!");
+        setErrorMessage(response.data.message || "Something went wrong!");
       }
     } catch (error) {
-      setErrorMessage("Server error. Please try again later.");
+      if (axios.isAxiosError(error)) {
+        setErrorMessage(error.response?.data?.message || "Server error. Please try again later.");
+      } else {
+        setErrorMessage("An unexpected error occurred.");
+      }
     } finally {
       setLoading(false);
     }

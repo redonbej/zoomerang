@@ -4,8 +4,9 @@ import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useAuth } from "@/components/hooks/useAuth"; 
-import { useRouter } from "next/navigation"; 
+import { useAuth } from "@/components/hooks/useAuth";
+import { useRouter } from "next/navigation";
+import axios from "axios";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -13,7 +14,7 @@ export default function Login() {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const { logIn } = useAuth();
-  const router = useRouter(); 
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -21,32 +22,29 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await axios.post("/api/auth/login", { email, password });
 
-      const data = await response.json();
+      if (response.status === 200) {
+        const { token, user } = response.data;
 
-      if (response.ok) {
-        localStorage.setItem("token", data.token);
+        localStorage.setItem("token", token);
 
         logIn({
-          id: data.user.id,
-          name: data.user.name,
-          email: data.user.email,
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          password: user.password,
         });
 
         router.push("/profile");
       } else {
-        setErrorMessage(data.message || "Something went wrong!");
+        setErrorMessage(response.data.message || "Something went wrong!");
       }
     } catch (error) {
       console.error("Error during login:", error);
-      setErrorMessage("Server error. Please try again later.");
+      setErrorMessage(
+        error.response?.data?.message || "Server error. Please try again later."
+      );
     } finally {
       setLoading(false);
     }

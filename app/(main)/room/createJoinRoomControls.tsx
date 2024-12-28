@@ -5,6 +5,7 @@ import {Button} from "@/components/ui/button";
 import {Keyboard, Video} from "lucide-react";
 import {toast} from "sonner";
 import {useRouter} from "next/navigation";
+import axios from "axios";
 
 export default function CreateJoinRoomControls() {
 
@@ -32,38 +33,45 @@ export default function CreateJoinRoomControls() {
         }
     }
 
-    const onJoin = () => {
-        setLoading('Joining');
-        fetch(`api/room?code=${text}`).then(res => res.json()).then(body => {
-            console.log(body);
+    const onJoin = async () => {
+        setLoading("Joining");
+
+        try {
+            const response = await axios.get(`/api/room`, { params: { code: text } });
+            const body = response.data;
+
             if (!body.rooms?.length) {
                 toast.error('Room does not exist');
             } else {
                 router.push(`/room/${body.rooms[0].id}`);
             }
-            setLoading(null);
-        }).catch(error => {
+        } catch (error) {
+            console.error("Error joining room:", error);
             toast.error('There was an error, please try again later');
+        } finally {
             setLoading(null);
-        });
-    }
+        }
+    };
 
-    const onCreate = () => {
-        setLoading('Creating room');
-        fetch(`api/room`, {
-            method: 'POST',
-        }).then(res => res.json()).then(room => {
+    const onCreate = async () => {
+        setLoading("Creating room");
+
+        try {
+            const response = await axios.post(`/api/room`);
+            const room = response.data;
+
             if(!room.id) {
-                toast.error('Could not create room, polease try again later');
+                toast.error('Could not create room, please try again later');
             } else {
                 router.push(`/room/${room.id}`);
             }
+        } catch (error) {
+            console.error("Error creating room:", error);
+            toast.error('Could not create room, please try again later');
+        } finally {
             setLoading(null);
-        }).catch(error => {
-           setLoading(null);
-           toast.error('Could not create room, polease try again later');
-        });
-    }
+        }
+    };
 
     return (
         <div className='flex items-center flex-wrap justify-center sm:justify-start pb-10 border-b border-gray-800'>
