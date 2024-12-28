@@ -6,7 +6,8 @@ import {LoadingSpinner} from "@/components/ui/spinner";
 import {RoomUserClient} from "@/app/(main)/room/[id]/roomUserClient";
 import SidePanel from "@/components/chat/sidePanel";
 import ActionButtons from "@/components/chat/actionButtons";
-import {SocketMessage} from "@/lib/interfaces";
+import {RoomMessage, RoomMessageResponse} from "@/lib/interfaces";
+import axios from "axios";
 
 const URL_WEB_SOCKET = 'ws://localhost:3001';
 const configuration = {};//{'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]};
@@ -19,12 +20,26 @@ export default function RoomMeeting(props: {id: string}) {
     const userId = useRef(uuid());
     const ws = useRef({} as any);
     const [isSidePanelVisible, setIsSidePanelVisible] = useState(false);
-    const [messages, setMessages] = useState<SocketMessage []>([]);
+    const [messages, setMessages] = useState<RoomMessage []>([]);
 
     const onMessageSend = (message: string) => {
         console.log(message)
         sendWSMsg({type: 'message_send', message: message});
         setMessages((prevMessages) => [...prevMessages, {message: message, user: {id: userId.current}, date: new Date()}]);
+    }
+
+    const fetchMessages = async () => {
+        try {
+            const response = await axios.get<RoomMessageResponse>(`/api/room/${props.id}/messages`);
+            const messages = response.data.messages;
+            console.log('response', response.data)
+            messages.forEach((message) => {
+                message.date = new Date(message.date);
+            });
+            setMessages((prevMessages) => [...messages, ...prevMessages]);
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     useEffect(() => {
@@ -56,7 +71,7 @@ export default function RoomMeeting(props: {id: string}) {
                 setGranted('granted')
                 console.log('granted');
                 startSocket();
-
+                fetchMessages();
             } else if (camResult.state === 'prompt' || miceResult.state === 'prompt') {
                 setGranted('prompt')
                 console.log('prompt')
