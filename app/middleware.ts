@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import prisma from '@/lib/prisma';
 
 export async function middleware(request: NextRequest) {
+  console.log('middleware executing')
   const token = request.headers.get('token');
 
   if (!token) {

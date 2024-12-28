@@ -1,8 +1,10 @@
 import { WebSocketServer } from "ws";
 import {v4 as uuid} from "uuid";
+import {RoomMessage} from "./lib/interfaces";
 
 const rooms: Room [] = [];
 const wss = new WebSocketServer({port: 3001});
+const url = `http://localhost:3000/api/room/[:id]/messages`;
 
 console.log('started listening')
 
@@ -23,7 +25,7 @@ const send = (wsClient, type, body) => {
     }))
 }
 
-const onMessage = (wss, socket, message) => {
+const onMessage = async (wss, socket, message) => {
     console.log(`onMessage ${message}`);
     const body = JSON.parse(message)
     const type = body.type
@@ -113,8 +115,20 @@ const onMessage = (wss, socket, message) => {
 
             const message = body.message;
             foundRoom.users.filter(user => user.id !== userId.id).forEach(user => {
-                send(user.socket, 'message_received', {senderId: userId, message})
+                send(user.socket, 'message_received', {senderId: userId, message});//send to clients
             });
+            try {
+                const response = await fetch(url.replace('[:id]', foundRoom.id), {
+                    method: 'POST',
+                    body: JSON.stringify({message: message, date: new Date(), user: {id: userId}} as Partial<RoomMessage>)
+                });
+                console.log('response status', response.status);
+                const body = await response.json();
+                console.log('response body', body);
+            } catch (e) {
+                console.error(e);
+            }
+
             break
         }
         default:
@@ -148,13 +162,21 @@ export interface RoomUser {
     socket: WebSocket;
 }
 
-const quit = (room: Room, userId: string) => {
+const quit = async (room: Room, userId: string) => {
     room.users = room.users.filter(user => user.id !== userId);
 
     //possibility to delete room if no users are there;
-    if (!room.users.length)
+    if (!room.users.length) {
         rooms.splice(rooms.findIndex(room => room.id === room.id), 1);
-    else {
+        try {
+            const response = await fetch(url.replace('[:id]', room.id), {
+                method: 'DELETE',
+            });
+            console.log('response status DELETE', response.status);
+        } catch (e) {
+            console.error(e);
+        }
+    } else {
         room.users.forEach(user => {
             send(user.socket, 'left', {userId})
         })
