@@ -8,9 +8,10 @@ import SidePanel from "@/components/chat/sidePanel";
 import ActionButtons from "@/components/chat/actionButtons";
 import {RoomMessage, RoomMessageResponse} from "@/lib/interfaces";
 import axios from "axios";
+import {set} from "lodash-es";
 
-const URL_WEB_SOCKET = 'ws://localhost:3001';
-const configuration = {};//{'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]};
+const URL_WEB_SOCKET = 'https://9f31-46-99-41-193.ngrok-free.app/';
+const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]};
 let roomUserClient: RoomUserClient [] = [];
 
 export default function RoomMeeting(props: {id: string}) {
@@ -203,7 +204,11 @@ export default function RoomMeeting(props: {id: string}) {
             }
         };;
         joinedUser.peerConnection.onaddstream = (event) => gotRemoteStream(event, joinedUser);
-        joinedUser.peerConnection.addStream(localStream);
+        if (!localStream) {
+            setTimeout(() => {joinedUser.peerConnection.addStream(localStream)}, 2000)
+        } else {
+            joinedUser.peerConnection.addStream(localStream);
+        }
         const offer = await joinedUser.peerConnection.createOffer();
         await joinedUser.peerConnection.setLocalDescription(offer);
     }
