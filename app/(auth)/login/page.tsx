@@ -51,7 +51,7 @@ export default function Login() {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-50">
+    <div className="flex justify-center items-center h-screen bg-gradient-to-r from-blue-500 via-purple-600 to-pink-600">
       <div className="bg-white p-8 rounded-lg shadow-lg w-96">
         <h2 className="text-2xl font-semibold text-center mb-6">Login</h2>
         {errorMessage && (
@@ -94,7 +94,7 @@ export default function Login() {
 
           <Button
             type="submit"
-            className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="w-full py-2 text-white rounded-md hover:bg-blue-700"
             disabled={loading}
           >
             {loading ? "Logging in..." : "Login"}

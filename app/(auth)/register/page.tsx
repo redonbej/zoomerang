@@ -74,7 +74,7 @@ export default function Register() {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-50">
+    <div className="flex justify-center my-16 items-center h-screen">
       <div className="bg-white p-8 rounded-lg shadow-lg w-96">
         <h2 className="text-2xl font-semibold text-center mb-6">Sign Up</h2>
         {errorMessage && <p className="text-red-500 text-center mb-4">{errorMessage}</p>}
@@ -158,7 +158,7 @@ export default function Register() {
 
           <Button
             type="submit"
-            className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="w-full py-2 text-white rounded-md hover:bg-blue-700"
             disabled={loading || !isPasswordValid || !isEmailValid}
           >
             {loading ? "Creating Account..." : "Sign Up"}

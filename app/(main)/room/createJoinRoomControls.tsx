@@ -84,15 +84,17 @@ export default function CreateJoinRoomControls() {
             <div className='mx-5 flex items-center'>
                 <div
                     className={'flex items-center border-2 border-[#e3e3e3] text-xl h-14 py-3 px-4 rounded-md ' + (focussed ? 'border-blue-500' : '')}>
-                    <Keyboard className='mr-2.5'/>
-                    <input className='outline-0 sm:w-[180px] w-full' placeholder='Enter Room Code' onFocus={focusIn}
+                    <Keyboard className='text-gray-100 mr-2.5'/>
+                    <input className='bg-transparent text-gray-100 placeholder:text-gray-100 outline-0 sm:w-[180px] w-full' placeholder='Enter Room Code' onFocus={focusIn}
                            onBlur={focusOut} onChange={(e) => textChange(e.target.value)}/>
                 </div>
 
-                <Button className='text-xl enabled:text-blue-600 ml-5 h-14 py-3 hover:bg-blue-100' variant='ghost'
-                        disabled={joinDisabled} onClick={onJoin}>
-                    Join
-                </Button>
+                <div className={`${joinDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                    <Button className='text-xl enabled:text-gray-100 text-gray-100 ml-5 h-14 py-3 bg-blue-500 hover:bg-blue-600' variant='ghost'
+                            disabled={joinDisabled} onClick={onJoin}>
+                        Join
+                    </Button>
+                </div>
             </div>
 
             {
