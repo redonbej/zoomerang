@@ -1,9 +1,10 @@
-import { AuthService, User } from "@/lib/interfaces";
+import { BaseAuthService } from "@/lib/BaseAuthService";
+import { User } from "@/lib/interfaces";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-export class JwtAuthService extends AuthService {
+export class JwtAuthService extends BaseAuthService {
   async login(email: string, password: string): Promise<string> {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user || !(await bcrypt.compare(password, user.password))) {
@@ -17,12 +18,4 @@ export class JwtAuthService extends AuthService {
     await prisma.user.create({ data: { ...user, password: hashedPassword } });
   }
 
-  async verifyToken(token: string): Promise<User | null> {
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string; email: string };
-      return prisma.user.findUnique({ where: { id: decoded.id } });
-    } catch {
-      return null;
-    }
-  }
 }
