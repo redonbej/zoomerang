@@ -28,7 +28,6 @@ export default function Login() {
         const { token, user } = response.data;
 
         localStorage.setItem("token", token);
-        window['user'] = user;
 
         logIn({
           id: user.id,

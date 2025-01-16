@@ -19,6 +19,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 try {
                     const { data } = await axiosInstance.get("/user");
                     setUser(data);
+                    window['user'] = data;
                     setIsAuthenticated(true);
                 } catch (error) {
                     setIsAuthenticated(false);
@@ -28,6 +29,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             fetchUserData();
         } else {
             setIsAuthenticated(false);
+            delete window['user'];
         }
     }, []);
 
@@ -42,6 +44,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     // Set user data after login
     const logIn = (userData: User) => {
+        window['user'] = user;
         setIsAuthenticated(true);
         setUser(userData);
     };
