@@ -1,6 +1,7 @@
 import { AuthProvider } from './context/AuthContext';
 import type { Metadata } from 'next';
-import { Header } from '@/components/layout/header';
+import Footer from '@/components/layout/footer';
+import Header from '@/components/layout/header';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
@@ -23,10 +24,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} antialiased flex flex-col h-screen`}>
+      <body className={`${inter.variable} antialiased flex flex-col bg-gradient-to-r from-blue-500 via-purple-600 to-pink-600 h-screen`}>
         <AuthProvider>
           <Header />
           <div className="flex-1">{children}</div>
+          <Footer />
         </AuthProvider>
         <Toaster />
       </body>

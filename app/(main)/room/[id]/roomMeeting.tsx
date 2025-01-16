@@ -295,7 +295,10 @@ export default function RoomMeeting(props: {id: string}) {
 
     return (<>
         <div className='h-full w-full p-2.5 flex flex-col'>
-            <h3 className='text-xl font-semibold'>Connected User: {userId.current}</h3>
+            <div className="flex flex-col md:flex-row w-full justify-between">
+                <h3 className='text-xl font-semibold'>Connected User: {userId.current}</h3>
+                <ActionButtons toggleSidePanel={toggleSidePanel}/>
+            </div>
 
             <div className='mt-10 flex flex-col items-center'>
                 <p className='text-center'>My Stream</p>
@@ -312,12 +315,9 @@ export default function RoomMeeting(props: {id: string}) {
                     ))
                 }
             </div>
-            <div className={`fixed right-[20px] bottom-[20px]`}>
-                <ActionButtons toggleSidePanel={toggleSidePanel}/>
-            </div>
 
             <div
-                className={`fixed w-96 top-4 bottom-20 bg-white shadow-lg rounded-md transition-all duration-300
+                className={`fixed w-96 top-12 bottom-14 bg-white shadow-lg rounded-md transition-all duration-300
            ease-in-out ${isSidePanelVisible ? "translate-x-0 right-4" : "translate-x-full right-0"}`}
             >
                 <SidePanel toggleSidePanel={toggleSidePanel} messages={messages} setMessages={setMessages} onMessageSend={onMessageSend}/>

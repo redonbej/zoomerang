@@ -20,14 +20,37 @@ export default function Profile() {
   }
 
   return (
-    <div className="max-w-screen-2xl m-auto flex justify-between items-center py-2 px-8">
-      <div className="bg-gray-50 shadow mt-12 w-full p-8 rounded-lg">
-        <h2 className="flex gap-1 font-medium items-center justify-center text-gray-800 text-2xl mb-16 text-center">
-          <User className="size-6"/> User information
+    <div className="max-w-screen-lg mx-auto py-8 px-4">
+      <div className="bg-white shadow-lg rounded-lg p-8">
+        <div className="flex flex-col items-center">
+          <div className="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center mb-6">
+            <User className="w-12 h-12 text-gray-600" />
+          </div>
+
+          <h2 className="text-gray-800 text-2xl font-semibold mb-2">
+            {user?.name || "User"}
           </h2>
-        <p className="flex text-gray-800 text-lg items-center gap-2"> My Profile</p>
-        <p className="flex text-gray-700 font-medium mt-4 items-center gap-2">Name: {user?.name}</p>
-        <p className="flex text-gray-700 font-medium items-center gap-2">Email: {user?.email}</p>
+          <p className="text-gray-500 text-sm mb-8">{user?.email || "Email not available"}</p>
+
+          <div className="w-full space-y-2">
+            <div className="flex items-center">
+              <span className="font-medium text-gray-600 uppercase tracking-wide mr-2">
+                Full Name:
+              </span>
+              <span className="text-gray-800 font-medium text-base">
+                {user?.name || "Not Provided"}
+              </span>
+            </div>
+            <div className="flex items-center mt-2">
+              <span className="font-medium text-gray-600 uppercase tracking-wide mr-2">
+                Email:
+              </span>
+              <span className="text-gray-800 font-medium text-base">
+                {user?.email || "Not Provided"}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

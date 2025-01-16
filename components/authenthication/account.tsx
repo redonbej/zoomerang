@@ -14,7 +14,7 @@ export default function Account() {
             {isAuthenticated ? (
                 <ProfileDropdown/>
             ) : (
-                <Button className="w-full bg-blue-600 text-white hover:bg-blue-700">
+                <Button className="w-full text-white hover:bg-blue-700">
                     <Link href="/login" className="text-base flex items-center gap-2">
                         <LogInIcon className="!size-5" /> Sign In
                     </Link>

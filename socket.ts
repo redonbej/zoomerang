@@ -1,6 +1,7 @@
 import { WebSocketServer } from "ws";
 import {v4 as uuid} from "uuid";
 import {RoomMessage} from "./lib/interfaces";
+import { WebRTCMessageType } from "./lib/enums";
 
 const rooms: Room [] = [];
 const wss = new WebSocketServer({port: 3001});
@@ -35,7 +36,7 @@ const onMessage = async (wss, socket, message) => {
     const foundRoom = rooms.find(room => room.id === roomId);
 
     switch (type) {
-        case 'join': {
+        case WebRTCMessageType.Join: {
 
             if (foundRoom) {
                 const foundUser = foundRoom.users.find(user => user.id === userId.id);
@@ -49,7 +50,7 @@ const onMessage = async (wss, socket, message) => {
                 }
                 //.filter(user => user.id !== userId)
                 foundRoom.users.forEach(user => {
-                    send(user.socket, 'joined', {userId, users: foundRoom.users.map(u => u.id)})
+                    send(user.socket, WebRTCMessageType.Joined, {userId, users: foundRoom.users.map(u => u.id)})
                 });
             } else {
                 const newRoom = new Room(roomId, [{
@@ -57,12 +58,12 @@ const onMessage = async (wss, socket, message) => {
                     socket: socket
                 }]);
                 rooms.push(newRoom);
-                send(socket, 'joined', {userId, users: [userId]})
+                send(socket, WebRTCMessageType.Joined, {userId, users: [userId]})
             }
 
             break;
         }
-        case 'quit': {
+        case WebRTCMessageType.Quit: {
             if (!foundRoom)
                 return;
 
@@ -70,7 +71,7 @@ const onMessage = async (wss, socket, message) => {
 
             break;
         }
-        case 'send_offer': {
+        case WebRTCMessageType.SendOffer: {
             if (!foundRoom)
                 return;
 
@@ -78,11 +79,11 @@ const onMessage = async (wss, socket, message) => {
             const offerToUserId = body.offerToUserId;
             const otherUser = foundRoom.users.find(user => user.id === offerToUserId);
 
-            send(otherUser.socket, 'offer_sdp_received', {sdp, userId})
+            send(otherUser.socket, WebRTCMessageType.OfferSdpReceived, {sdp, userId})
 
             break;
         }
-        case 'send_answer': {
+        case WebRTCMessageType.SendAnswer: {
             if (!foundRoom)
                 return;
 
@@ -91,12 +92,12 @@ const onMessage = async (wss, socket, message) => {
             const answerToUserId = body.answerToUserId;
             const otherUser = foundRoom.users.find(user => user.id === answerToUserId);
 
-            send(otherUser.socket, 'answer_sdp', {sdp, userId})
+            send(otherUser.socket, WebRTCMessageType.AnswerSdp, {sdp, userId})
 
 
             break;
         }
-        case 'send_ice_candidate': {
+        case WebRTCMessageType.SendIceCandidate: {
             if (!foundRoom)
                 return;
 
@@ -104,18 +105,18 @@ const onMessage = async (wss, socket, message) => {
             const otherUsers = foundRoom.users.filter(user => user.id !== userId);
 
             otherUsers.forEach(user => {
-                send(user.socket, 'ice_candidate_received', {candidate, userId})
+                send(user.socket, WebRTCMessageType.IceCandidateReceived, {candidate, userId})
             });
 
             break;
         }
-        case 'message_send': {
+        case WebRTCMessageType.MessageSend: {
             if (!foundRoom)
                 return;
 
             const message = body.message;
             foundRoom.users.filter(user => user.id !== userId.id).forEach(user => {
-                send(user.socket, 'message_received', {senderId: userId, message});//send to clients
+                send(user.socket, WebRTCMessageType.MessageReceived, {senderId: userId, message});//send to clients
             });
             try {
                 const response = await fetch(url.replace('[:id]', foundRoom.id), {
@@ -179,7 +180,7 @@ const quit = async (room: Room, userId: string) => {
         }
     } else {
         room.users.forEach(user => {
-            send(user.socket, 'left', {userId})
+            send(user.socket, WebRTCMessageType.Left, {userId})
         })
     }
 }

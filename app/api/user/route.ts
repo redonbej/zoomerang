@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
+import { UserServiceProxy } from "@/lib/UserServiceProxy";
 
 export async function GET(req: NextRequest) {
   try {
@@ -26,10 +26,10 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Get user data based on the decoded token (user id or email)
-    const user = await prisma.user.findUnique({
-      where: { email: decoded.email },
-    });
+    const userServiceProxy = new UserServiceProxy();
+
+    const user = await userServiceProxy.getUserByEmail(decoded.email);
+
 
     if (!user) {
       return NextResponse.json({ message: "User not found." }, { status: 404 });
