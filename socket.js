@@ -190,13 +190,15 @@ var onMessage = function (wss, socket, message) { return __awaiter(void 0, void 
     });
 }); };
 function onClose(wss, socket, message) {
+    var _a, _b;
     console.log('onClose', message);
     for (var _i = 0, rooms_1 = rooms; _i < rooms_1.length; _i++) {
         var room = rooms_1[_i];
         var index = room.users.findIndex(function (user) { return user.socket['__uuid'] === socket['__uuid']; });
         if (index != null) {
-            console.log('removed user', room.users[index].id);
-            quit(room, room.users[index].id);
+            console.log('removed user', (_a = room.users[index]) === null || _a === void 0 ? void 0 : _a.id);
+            if ((_b = room.users[index]) === null || _b === void 0 ? void 0 : _b.id)
+                quit(room, room.users[index].id);
             //room.users.splice(index, 1);
             break;
         }

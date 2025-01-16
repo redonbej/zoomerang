@@ -140,8 +140,9 @@ function onClose(wss, socket, message) {
     for (const room of rooms) {
         const index = room.users.findIndex(user => user.socket['__uuid'] === socket['__uuid']);
         if (index != null) {
-            console.log('removed user', room.users[index].id);
-            quit(room, room.users[index].id);
+            console.log('removed user', room.users[index]?.id);
+            if(room.users[index]?.id)
+                quit(room, room.users[index].id);
             //room.users.splice(index, 1);
             break;
         }

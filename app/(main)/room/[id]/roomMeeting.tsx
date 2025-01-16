@@ -10,7 +10,7 @@ import {RoomMessage, RoomMessageResponse} from "@/lib/interfaces";
 import axios from "axios";
 import {set} from "lodash-es";
 
-const URL_WEB_SOCKET = 'https://9f31-46-99-41-193.ngrok-free.app/';
+const URL_WEB_SOCKET = 'https://e44a-2a03-4b80-c300-1cb0-6dc7-4bc-ff57-64bc.ngrok-free.app/';
 const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]};
 let roomUserClient: RoomUserClient [] = [];
 
@@ -253,7 +253,8 @@ export default function RoomMeeting(props: {id: string}) {
             }
         };
         callerUser.peerConnection.onaddstream = (event) => gotRemoteStream(event, callerUser);
-        callerUser.peerConnection.addStream(localStream);
+        if (localStream && localStream instanceof MediaStream)
+            callerUser.peerConnection.addStream(localStream);
         callerUser.peerConnection.setRemoteDescription(sdpOffer);
         callerUser.peerConnection.createAnswer().then(answer => {
             callerUser.peerConnection.setLocalDescription(answer);
