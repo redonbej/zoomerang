@@ -244,7 +244,7 @@ export default function RoomMeeting(props: {id: string}) {
     };
 
     const joinRoom = () => {
-        sendWSMsg({type: 'join', name: window['user'] || 'No Name given'});
+        sendWSMsg({type: 'join', name: window['user']?.name || 'No Name given'});
     }
 
     const onAnswer = (callerUser: RoomUserClient, sdpOffer) => {
