@@ -27,7 +27,7 @@ export default function RoomMeeting(props: {id: string}) {
     const onMessageSend = (message: string) => {
         console.log(message)
         sendWSMsg({type: 'message_send', message: message});
-        setMessages((prevMessages) => [...prevMessages, {message: message, user: {id: userId.current}, date: new Date()}]);
+        setMessages((prevMessages) => [...prevMessages, {message: message, user: {id: userId.current, name: window['user']?.name}, date: new Date()}]);
     }
 
     const fetchMessages = async () => {
@@ -141,6 +141,7 @@ export default function RoomMeeting(props: {id: string}) {
                         makeCall(newUser)
                         setRoomUsers([...roomUserClient]);
                     }
+                    setRoomUsers([...roomUserClient]);
                     console.log(roomUserClient)
                     break;
                 }
@@ -174,9 +175,11 @@ export default function RoomMeeting(props: {id: string}) {
                 }
                 case 'message_received': {
                     const {message, senderId, name} = parsedMessage;
+                    console.log(parsedMessage, 'message received1')
                     if (userId.current === senderId)
                         return;
-                    setMessages((prevMessages) => [...prevMessages, {message: message, name, user: {id: senderId}, date: new Date()}]);
+                    console.log(parsedMessage, 'message received')
+                    setMessages((prevMessages) => [...prevMessages, {message: message, user: {id: senderId, name: name}, date: new Date()}]);
                     break;
                 }
                 case 'quit': {

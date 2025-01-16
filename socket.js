@@ -68,10 +68,10 @@ var send = function (wsClient, type, body) {
 };
 var onMessage = function (wss, socket, message) { return __awaiter(void 0, void 0, void 0, function () {
     var body, type, roomId, userId, foundRoom, _a, foundUser, newRoom, sdp, offerToUserId_1, otherUser, sdp, answerToUserId_1, otherUser, candidate_1, otherUsers, message_1, response, body_1, e_1;
-    return __generator(this, function (_b) {
-        switch (_b.label) {
+    var _b;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
             case 0:
-                console.log("onMessage ".concat(message));
                 body = JSON.parse(message);
                 type = body.type;
                 roomId = body.roomId;
@@ -93,7 +93,7 @@ var onMessage = function (wss, socket, message) { return __awaiter(void 0, void 
                     //console.log('ping')
                     return [3 /*break*/, 14];
                 }
-                _b.label = 2;
+                _c.label = 2;
             case 2:
                 {
                     if (foundRoom) {
@@ -124,7 +124,7 @@ var onMessage = function (wss, socket, message) { return __awaiter(void 0, void 
                     }
                     return [3 /*break*/, 14];
                 }
-                _b.label = 3;
+                _c.label = 3;
             case 3:
                 {
                     if (!foundRoom)
@@ -132,7 +132,7 @@ var onMessage = function (wss, socket, message) { return __awaiter(void 0, void 
                     quit(foundRoom, userId);
                     return [3 /*break*/, 14];
                 }
-                _b.label = 4;
+                _c.label = 4;
             case 4:
                 {
                     if (!foundRoom)
@@ -143,7 +143,7 @@ var onMessage = function (wss, socket, message) { return __awaiter(void 0, void 
                     send(otherUser.socket, enums_1.WebRTCMessageType.OfferSdpReceived, { sdp: sdp, userId: userId });
                     return [3 /*break*/, 14];
                 }
-                _b.label = 5;
+                _c.label = 5;
             case 5:
                 {
                     if (!foundRoom)
@@ -154,7 +154,7 @@ var onMessage = function (wss, socket, message) { return __awaiter(void 0, void 
                     send(otherUser.socket, enums_1.WebRTCMessageType.AnswerSdp, { sdp: sdp, userId: userId });
                     return [3 /*break*/, 14];
                 }
-                _b.label = 6;
+                _c.label = 6;
             case 6:
                 {
                     if (!foundRoom)
@@ -166,31 +166,32 @@ var onMessage = function (wss, socket, message) { return __awaiter(void 0, void 
                     });
                     return [3 /*break*/, 14];
                 }
-                _b.label = 7;
+                _c.label = 7;
             case 7:
                 if (!foundRoom)
                     return [2 /*return*/];
                 message_1 = body.message;
                 foundRoom.users.filter(function (user) { return user.id !== userId.id; }).forEach(function (user) {
-                    send(user.socket, enums_1.WebRTCMessageType.MessageReceived, { senderId: userId, message: message_1 }); //send to clients
+                    var _a;
+                    send(user.socket, enums_1.WebRTCMessageType.MessageReceived, { senderId: userId, message: message_1, name: ((_a = foundRoom.users.find(function (u) { return u.id === userId; })) === null || _a === void 0 ? void 0 : _a.name) || 'No Name given' }); //send to clients
                 });
-                _b.label = 8;
+                _c.label = 8;
             case 8:
-                _b.trys.push([8, 11, , 12]);
+                _c.trys.push([8, 11, , 12]);
                 return [4 /*yield*/, fetch(url.replace('[:id]', foundRoom.id), {
                         method: 'POST',
-                        body: JSON.stringify({ message: message_1, date: new Date(), user: { id: userId } })
+                        body: JSON.stringify({ message: message_1, date: new Date(), user: { id: userId, name: ((_b = foundRoom.users.find(function (u) { return u.id === userId; })) === null || _b === void 0 ? void 0 : _b.name) || 'No Name given' } })
                     })];
             case 9:
-                response = _b.sent();
+                response = _c.sent();
                 console.log('response status', response.status);
                 return [4 /*yield*/, response.json()];
             case 10:
-                body_1 = _b.sent();
+                body_1 = _c.sent();
                 console.log('response body', body_1);
                 return [3 /*break*/, 12];
             case 11:
-                e_1 = _b.sent();
+                e_1 = _c.sent();
                 console.error(e_1);
                 return [3 /*break*/, 12];
             case 12: return [3 /*break*/, 14];

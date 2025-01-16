@@ -27,7 +27,7 @@ const send = (wsClient, type, body) => {
 }
 
 const onMessage = async (wss, socket, message) => {
-    console.log(`onMessage ${message}`);
+    //console.log(`onMessage ${message}`);
     const body = JSON.parse(message)
     const type = body.type
     const roomId = body.roomId
@@ -122,7 +122,7 @@ const onMessage = async (wss, socket, message) => {
 
             const message = body.message;
             foundRoom.users.filter(user => user.id !== userId.id).forEach(user => {
-                send(user.socket, WebRTCMessageType.MessageReceived, {senderId: userId, message, name: user.name});//send to clients
+                send(user.socket, WebRTCMessageType.MessageReceived, {senderId: userId, message, name: foundRoom.users.find(u => u.id === userId)?.name || 'No Name given'});//send to clients
             });
             try {
                 const response = await fetch(url.replace('[:id]', foundRoom.id), {
