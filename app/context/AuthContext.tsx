@@ -11,6 +11,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [user, setUser] = useState<User | null>(null);
     const router = useRouter();
+    window['user'] = JSON.parse(localStorage.getItem("user") || '{}');
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -30,6 +31,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         } else {
             setIsAuthenticated(false);
             delete window['user'];
+            localStorage.removeItem('user')
         }
     }, []);
 
@@ -40,13 +42,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setUser(null);
         router.push("/login");
         delete window['user'];
+        localStorage.removeItem('user')
     };
 
     // Set user data after login
     const logIn = (userData: User) => {
-        window['user'] = user;
+        window['user'] = userData;
         setIsAuthenticated(true);
         setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData))
     };
 
     return (
