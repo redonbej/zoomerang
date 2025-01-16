@@ -72,14 +72,19 @@ export default function RoomMeeting(props: {id: string}) {
             if (camResult.state === 'granted' && miceResult.state === 'granted') {
                 setGranted('granted')
                 console.log('granted');
-                startSocket();
-                fetchMessages();
+                if(!window['started']) {
+                    startSocket();
+                    fetchMessages();
+                    window['started'] = true;
+                }
+
             } else if (camResult.state === 'prompt' || miceResult.state === 'prompt') {
                 setGranted('prompt')
                 console.log('prompt')
             } else {
                 setGranted('denied')
                 console.log('denied')
+                window['started'] = false;
                 ws.current?.close?.();
             }
 
