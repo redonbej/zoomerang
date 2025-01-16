@@ -10,6 +10,7 @@ export enum WebRTCMessageType {
     AnswerSdp = 'answer_sdp',
     IceCandidateReceived = 'ice_candidate_received',
     MessageReceived = 'message_received',
-    Left = 'left'
+    Left = 'left',
+    PING = 'ping'
   }
   

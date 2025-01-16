@@ -50,6 +50,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Room = void 0;
 var ws_1 = require("ws");
 var uuid_1 = require("uuid");
+var enums_1 = require("./lib/enums");
 var rooms = [];
 var wss = new ws_1.WebSocketServer({ port: 3001 });
 var url = "http://localhost:3000/api/room/[:id]/messages";
@@ -78,15 +79,22 @@ var onMessage = function (wss, socket, message) { return __awaiter(void 0, void 
                 foundRoom = rooms.find(function (room) { return room.id === roomId; });
                 _a = type;
                 switch (_a) {
-                    case 'join': return [3 /*break*/, 1];
-                    case 'quit': return [3 /*break*/, 2];
-                    case 'send_offer': return [3 /*break*/, 3];
-                    case 'send_answer': return [3 /*break*/, 4];
-                    case 'send_ice_candidate': return [3 /*break*/, 5];
-                    case 'message_send': return [3 /*break*/, 6];
+                    case enums_1.WebRTCMessageType.PING: return [3 /*break*/, 1];
+                    case enums_1.WebRTCMessageType.Join: return [3 /*break*/, 2];
+                    case enums_1.WebRTCMessageType.Quit: return [3 /*break*/, 3];
+                    case enums_1.WebRTCMessageType.SendOffer: return [3 /*break*/, 4];
+                    case enums_1.WebRTCMessageType.SendAnswer: return [3 /*break*/, 5];
+                    case enums_1.WebRTCMessageType.SendIceCandidate: return [3 /*break*/, 6];
+                    case enums_1.WebRTCMessageType.MessageSend: return [3 /*break*/, 7];
                 }
-                return [3 /*break*/, 12];
+                return [3 /*break*/, 13];
             case 1:
+                {
+                    console.log('ping');
+                    return [3 /*break*/, 14];
+                }
+                _b.label = 2;
+            case 2:
                 {
                     if (foundRoom) {
                         foundUser = foundRoom.users.find(function (user) { return user.id === userId.id; });
@@ -101,7 +109,7 @@ var onMessage = function (wss, socket, message) { return __awaiter(void 0, void 
                         }
                         //.filter(user => user.id !== userId)
                         foundRoom.users.forEach(function (user) {
-                            send(user.socket, 'joined', { userId: userId, users: foundRoom.users.map(function (u) { return u.id; }) });
+                            send(user.socket, enums_1.WebRTCMessageType.Joined, { userId: userId, users: foundRoom.users.map(function (u) { return u.id; }) });
                         });
                     }
                     else {
@@ -110,28 +118,17 @@ var onMessage = function (wss, socket, message) { return __awaiter(void 0, void 
                                 socket: socket
                             }]);
                         rooms.push(newRoom);
-                        send(socket, 'joined', { userId: userId, users: [userId] });
+                        send(socket, enums_1.WebRTCMessageType.Joined, { userId: userId, users: [userId] });
                     }
-                    return [3 /*break*/, 13];
-                }
-                _b.label = 2;
-            case 2:
-                {
-                    if (!foundRoom)
-                        return [2 /*return*/];
-                    quit(foundRoom, userId);
-                    return [3 /*break*/, 13];
+                    return [3 /*break*/, 14];
                 }
                 _b.label = 3;
             case 3:
                 {
                     if (!foundRoom)
                         return [2 /*return*/];
-                    sdp = body.sdp;
-                    offerToUserId_1 = body.offerToUserId;
-                    otherUser = foundRoom.users.find(function (user) { return user.id === offerToUserId_1; });
-                    send(otherUser.socket, 'offer_sdp_received', { sdp: sdp, userId: userId });
-                    return [3 /*break*/, 13];
+                    quit(foundRoom, userId);
+                    return [3 /*break*/, 14];
                 }
                 _b.label = 4;
             case 4:
@@ -139,53 +136,64 @@ var onMessage = function (wss, socket, message) { return __awaiter(void 0, void 
                     if (!foundRoom)
                         return [2 /*return*/];
                     sdp = body.sdp;
-                    answerToUserId_1 = body.answerToUserId;
-                    otherUser = foundRoom.users.find(function (user) { return user.id === answerToUserId_1; });
-                    send(otherUser.socket, 'answer_sdp', { sdp: sdp, userId: userId });
-                    return [3 /*break*/, 13];
+                    offerToUserId_1 = body.offerToUserId;
+                    otherUser = foundRoom.users.find(function (user) { return user.id === offerToUserId_1; });
+                    send(otherUser.socket, enums_1.WebRTCMessageType.OfferSdpReceived, { sdp: sdp, userId: userId });
+                    return [3 /*break*/, 14];
                 }
                 _b.label = 5;
             case 5:
                 {
                     if (!foundRoom)
                         return [2 /*return*/];
-                    candidate_1 = body.candidate;
-                    otherUsers = foundRoom.users.filter(function (user) { return user.id !== userId; });
-                    otherUsers.forEach(function (user) {
-                        send(user.socket, 'ice_candidate_received', { candidate: candidate_1, userId: userId });
-                    });
-                    return [3 /*break*/, 13];
+                    sdp = body.sdp;
+                    answerToUserId_1 = body.answerToUserId;
+                    otherUser = foundRoom.users.find(function (user) { return user.id === answerToUserId_1; });
+                    send(otherUser.socket, enums_1.WebRTCMessageType.AnswerSdp, { sdp: sdp, userId: userId });
+                    return [3 /*break*/, 14];
                 }
                 _b.label = 6;
             case 6:
+                {
+                    if (!foundRoom)
+                        return [2 /*return*/];
+                    candidate_1 = body.candidate;
+                    otherUsers = foundRoom.users.filter(function (user) { return user.id !== userId; });
+                    otherUsers.forEach(function (user) {
+                        send(user.socket, enums_1.WebRTCMessageType.IceCandidateReceived, { candidate: candidate_1, userId: userId });
+                    });
+                    return [3 /*break*/, 14];
+                }
+                _b.label = 7;
+            case 7:
                 if (!foundRoom)
                     return [2 /*return*/];
                 message_1 = body.message;
                 foundRoom.users.filter(function (user) { return user.id !== userId.id; }).forEach(function (user) {
-                    send(user.socket, 'message_received', { senderId: userId, message: message_1 }); //send to clients
+                    send(user.socket, enums_1.WebRTCMessageType.MessageReceived, { senderId: userId, message: message_1 }); //send to clients
                 });
-                _b.label = 7;
-            case 7:
-                _b.trys.push([7, 10, , 11]);
+                _b.label = 8;
+            case 8:
+                _b.trys.push([8, 11, , 12]);
                 return [4 /*yield*/, fetch(url.replace('[:id]', foundRoom.id), {
                         method: 'POST',
                         body: JSON.stringify({ message: message_1, date: new Date(), user: { id: userId } })
                     })];
-            case 8:
+            case 9:
                 response = _b.sent();
                 console.log('response status', response.status);
                 return [4 /*yield*/, response.json()];
-            case 9:
+            case 10:
                 body_1 = _b.sent();
                 console.log('response body', body_1);
-                return [3 /*break*/, 11];
-            case 10:
+                return [3 /*break*/, 12];
+            case 11:
                 e_1 = _b.sent();
                 console.error(e_1);
-                return [3 /*break*/, 11];
-            case 11: return [3 /*break*/, 13];
-            case 12: return [3 /*break*/, 13];
-            case 13: return [2 /*return*/];
+                return [3 /*break*/, 12];
+            case 12: return [3 /*break*/, 14];
+            case 13: return [3 /*break*/, 14];
+            case 14: return [2 /*return*/];
         }
     });
 }); };
@@ -238,7 +246,7 @@ var quit = function (room, userId) { return __awaiter(void 0, void 0, void 0, fu
             case 4: return [3 /*break*/, 6];
             case 5:
                 room.users.forEach(function (user) {
-                    send(user.socket, 'left', { userId: userId });
+                    send(user.socket, enums_1.WebRTCMessageType.Left, { userId: userId });
                 });
                 _a.label = 6;
             case 6: return [2 /*return*/];

@@ -36,6 +36,10 @@ const onMessage = async (wss, socket, message) => {
     const foundRoom = rooms.find(room => room.id === roomId);
 
     switch (type) {
+        case WebRTCMessageType.PING: {
+            console.log('ping')
+            break;
+        }
         case WebRTCMessageType.Join: {
 
             if (foundRoom) {

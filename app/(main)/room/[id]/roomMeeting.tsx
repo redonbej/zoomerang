@@ -8,7 +8,6 @@ import SidePanel from "@/components/chat/sidePanel";
 import ActionButtons from "@/components/chat/actionButtons";
 import {RoomMessage, RoomMessageResponse} from "@/lib/interfaces";
 import axios from "axios";
-import {set} from "lodash-es";
 
 const URL_WEB_SOCKET = 'https://e44a-2a03-4b80-c300-1cb0-6dc7-4bc-ff57-64bc.ngrok-free.app/';
 const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]};
@@ -99,6 +98,10 @@ export default function RoomMeeting(props: {id: string}) {
             await handlePermissions();
             console.log(granted)
         })();
+        clearInterval(window['socketInterval'])
+        window['socketInterval'] = setInterval(() => {
+            ws?.current?.send?.(JSON.stringify({type: 'ping'}));
+        }, 2000)
     }, [])
 
     const startSocket = () => {
