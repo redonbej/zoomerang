@@ -37,7 +37,7 @@ const onMessage = async (wss, socket, message) => {
 
     switch (type) {
         case WebRTCMessageType.PING: {
-            console.log('ping')
+            //console.log('ping')
             break;
         }
         case WebRTCMessageType.Join: {
@@ -49,20 +49,22 @@ const onMessage = async (wss, socket, message) => {
                 } else {
                     foundRoom.users.push({
                         id: userId,
-                        socket: socket
+                        socket: socket,
+                        name: body.name
                     });
                 }
                 //.filter(user => user.id !== userId)
                 foundRoom.users.forEach(user => {
-                    send(user.socket, WebRTCMessageType.Joined, {userId, users: foundRoom.users.map(u => u.id)})
+                    send(user.socket, WebRTCMessageType.Joined, {userId, users: foundRoom.users.map(u => ({id: u.id, name: u.name}))})
                 });
             } else {
                 const newRoom = new Room(roomId, [{
                     id: userId,
-                    socket: socket
+                    socket: socket,
+                    name: body.name
                 }]);
                 rooms.push(newRoom);
-                send(socket, WebRTCMessageType.Joined, {userId, users: [userId]})
+                send(socket, WebRTCMessageType.Joined, {userId, users: [{id: userId, name: body.name}]})
             }
 
             break;
@@ -166,6 +168,7 @@ export class Room {
 export interface RoomUser {
     id: string;
     socket: WebSocket;
+    name?: string;
 }
 
 const quit = async (room: Room, userId: string) => {

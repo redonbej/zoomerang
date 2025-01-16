@@ -8,6 +8,7 @@ import SidePanel from "@/components/chat/sidePanel";
 import ActionButtons from "@/components/chat/actionButtons";
 import {RoomMessage, RoomMessageResponse} from "@/lib/interfaces";
 import axios from "axios";
+import {useAuth} from "@/components/hooks/useAuth";
 
 const URL_WEB_SOCKET = 'https://e44a-2a03-4b80-c300-1cb0-6dc7-4bc-ff57-64bc.ngrok-free.app/';
 const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]};
@@ -15,6 +16,7 @@ let roomUserClient: RoomUserClient [] = [];
 
 export default function RoomMeeting(props: {id: string}) {
 
+    const { user, isAuthenticated } = useAuth();
     const [roomUsers, setRoomUsers] = useState<RoomUserClient []>([]);
     const [granted, setGranted] = useState(null);
     const userId = useRef(uuid());
@@ -120,10 +122,11 @@ export default function RoomMeeting(props: {id: string}) {
             switch (parsedMessage.type) {
                 case 'joined': {
                     const newJoinedUserId = parsedMessage.userId;
-                    const allUsersId = parsedMessage.users.filter(id => id !== userId.current);
+                    console.log('parsem msg: ',parsedMessage)
+                    const allJoinedUsers = parsedMessage.users.filter(user => user.id !== userId.current);
                     console.log('my room users', roomUserClient)
                     if (!roomUserClient.length) {
-                        roomUserClient = allUsersId.map(id => ({id: id, peerConnection: null}));
+                        roomUserClient = allJoinedUsers.map(user => ({id: user.id, name: user.name, peerConnection: null}));
                         console.log('adding users', roomUserClient);
                         setRoomUsers(roomUserClient)
                     }
@@ -241,7 +244,7 @@ export default function RoomMeeting(props: {id: string}) {
     };
 
     const joinRoom = () => {
-        sendWSMsg({type: 'join'});
+        sendWSMsg({type: 'join', name: window['user'] || 'No Name given'});
     }
 
     const onAnswer = (callerUser: RoomUserClient, sdpOffer) => {
@@ -304,7 +307,7 @@ export default function RoomMeeting(props: {id: string}) {
             </div>
 
             <div className='mt-10 flex flex-col items-center'>
-                <p className='text-center'>My Stream</p>
+                <p className='text-center'>My Stream: {user?.name}</p>
                 <video id="localPlayer" autoPlay style={{width: 640, height: 480}}/>
             </div>
 
@@ -312,7 +315,8 @@ export default function RoomMeeting(props: {id: string}) {
                 {
                     roomUsers.map((roomUser: RoomUserClient) => (
                         <div key={roomUser.id}>
-                            <p>User: {roomUser.id}</p>
+                            <p>User Name: {roomUser.name}</p>
+                            <p>Connection ID: {roomUser.id}</p>
                             <video id={roomUser.id + 'video'} autoPlay style={{height: '240px'}} className='mr-10'></video>
                         </div>
                     ))

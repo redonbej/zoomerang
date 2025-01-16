@@ -90,7 +90,7 @@ var onMessage = function (wss, socket, message) { return __awaiter(void 0, void 
                 return [3 /*break*/, 13];
             case 1:
                 {
-                    console.log('ping');
+                    //console.log('ping')
                     return [3 /*break*/, 14];
                 }
                 _b.label = 2;
@@ -104,21 +104,23 @@ var onMessage = function (wss, socket, message) { return __awaiter(void 0, void 
                         else {
                             foundRoom.users.push({
                                 id: userId,
-                                socket: socket
+                                socket: socket,
+                                name: body.name
                             });
                         }
                         //.filter(user => user.id !== userId)
                         foundRoom.users.forEach(function (user) {
-                            send(user.socket, enums_1.WebRTCMessageType.Joined, { userId: userId, users: foundRoom.users.map(function (u) { return u.id; }) });
+                            send(user.socket, enums_1.WebRTCMessageType.Joined, { userId: userId, users: foundRoom.users.map(function (u) { return ({ id: u.id, name: u.name }); }) });
                         });
                     }
                     else {
                         newRoom = new Room(roomId, [{
                                 id: userId,
-                                socket: socket
+                                socket: socket,
+                                name: body.name
                             }]);
                         rooms.push(newRoom);
-                        send(socket, enums_1.WebRTCMessageType.Joined, { userId: userId, users: [userId] });
+                        send(socket, enums_1.WebRTCMessageType.Joined, { userId: userId, users: [{ id: userId, name: body.name }] });
                     }
                     return [3 /*break*/, 14];
                 }

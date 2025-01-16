@@ -37,6 +37,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setIsAuthenticated(false);
         setUser(null);
         router.push("/login");
+        delete window['user'];
     };
 
     // Set user data after login
