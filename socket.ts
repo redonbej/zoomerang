@@ -122,12 +122,12 @@ const onMessage = async (wss, socket, message) => {
 
             const message = body.message;
             foundRoom.users.filter(user => user.id !== userId.id).forEach(user => {
-                send(user.socket, WebRTCMessageType.MessageReceived, {senderId: userId, message});//send to clients
+                send(user.socket, WebRTCMessageType.MessageReceived, {senderId: userId, message, name: user.name});//send to clients
             });
             try {
                 const response = await fetch(url.replace('[:id]', foundRoom.id), {
                     method: 'POST',
-                    body: JSON.stringify({message: message, date: new Date(), user: {id: userId}} as Partial<RoomMessage>)
+                    body: JSON.stringify({message: message, date: new Date(), user: {id: userId, name: foundRoom.users.find(u => u.id === userId)?.name || 'No Name given'}} as Partial<RoomMessage>)
                 });
                 console.log('response status', response.status);
                 const body = await response.json();

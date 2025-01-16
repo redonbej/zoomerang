@@ -173,10 +173,10 @@ export default function RoomMeeting(props: {id: string}) {
                     break;
                 }
                 case 'message_received': {
-                    const {message, senderId} = parsedMessage;
+                    const {message, senderId, name} = parsedMessage;
                     if (userId.current === senderId)
                         return;
-                    setMessages((prevMessages) => [...prevMessages, {message: message, user: {id: senderId}, date: new Date()}]);
+                    setMessages((prevMessages) => [...prevMessages, {message: message, name, user: {id: senderId}, date: new Date()}]);
                     break;
                 }
                 case 'quit': {

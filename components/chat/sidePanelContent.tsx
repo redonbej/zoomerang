@@ -53,7 +53,7 @@ export default function SidePanelContent({ toggleSidePanel, setMessages, message
                 <div className="flex flex-col gap-2">
                     {messages.map((msg, index) => (
                         <div key={index}>
-                            <p className={`font-semibold text-base mb-2`}>{msg.user.id}
+                            <p className={`font-semibold text-base mb-2`}>{msg.user.name}
                                 <span className={`font-normal ml-2`}>
                                     {msg.date?.toLocaleDateString()}
                                 </span>

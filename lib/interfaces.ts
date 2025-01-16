@@ -11,6 +11,7 @@ export interface RoomMessage {
   message: string;
   user: Partial<User>;
   date: Date;
+  name?: string;
 }
 
 export interface RoomMessageResponse {
