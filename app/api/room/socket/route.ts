@@ -2,16 +2,12 @@ import {NextApiRequest, NextApiResponse} from "next";
 import { WebSocketServer } from "ws";
 import {NextResponse} from "next/server";
 
-export async function GET(req: NextApiRequest,
-                                      res: NextApiResponse) {
-
-    console.log('res', res);
+export async function GET(req: NextApiRequest, res: NextApiResponse) {
 
     const wss = new WebSocketServer({ noServer: true });
 
     wss.on('connection', (ws) => {
         ws.on('message', (message) => {
-            console.log('received: %s', message);
             ws.send(message);
         });
     });

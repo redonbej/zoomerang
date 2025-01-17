@@ -25,7 +25,6 @@ export default function RoomMeeting(props: {id: string}) {
     const [messages, setMessages] = useState<RoomMessage []>([]);
 
     const onMessageSend = (message: string) => {
-        console.log(message)
         sendWSMsg({type: 'message_send', message: message});
         setMessages((prevMessages) => [...prevMessages, {message: message, user: {id: userId.current, name: window['user']?.name}, date: new Date()}]);
     }
@@ -34,7 +33,6 @@ export default function RoomMeeting(props: {id: string}) {
         try {
             const response = await axios.get<RoomMessageResponse>(`/api/room/${props.id}/messages`);
             const messages = response.data.messages;
-            console.log('response', response.data)
             messages.forEach((message) => {
                 message.date = new Date(message.date);
             });
@@ -45,7 +43,6 @@ export default function RoomMeeting(props: {id: string}) {
     }
 
     useEffect(() => {
-        console.log(messages);
     }, [messages]);
 
     const toggleSidePanel = () => {
@@ -53,7 +50,6 @@ export default function RoomMeeting(props: {id: string}) {
     };
 
     useEffect(() => {
-        console.log(roomUsers);
     }, [roomUsers]);
 
     const handlePermissions = async ():Promise<'granted' | any> => {
@@ -61,17 +57,13 @@ export default function RoomMeeting(props: {id: string}) {
             const camResult = await navigator.permissions.query({ name: "camera" });
             const miceResult = await navigator.permissions.query({ name: "microphone" });
             camResult.onchange = () => {
-                console.log('on change camera: ',camResult)
                 handlePermissions();
             };
             miceResult.onchange = () => {
-                console.log('on change mice:', miceResult)
                 handlePermissions();
             };
-            console.log(camResult, miceResult);
             if (camResult.state === 'granted' && miceResult.state === 'granted') {
                 setGranted('granted')
-                console.log('granted');
                 if(!window['started']) {
                     startSocket();
                     fetchMessages();
@@ -80,18 +72,14 @@ export default function RoomMeeting(props: {id: string}) {
 
             } else if (camResult.state === 'prompt' || miceResult.state === 'prompt') {
                 setGranted('prompt')
-                console.log('prompt')
             } else {
                 setGranted('denied')
-                console.log('denied')
                 window['started'] = false;
                 ws.current?.close?.();
             }
 
         } catch (error) {
-            console.log(error);
             setGranted('denied')
-            console.log('denied')
             ws.current?.close?.();
         }
 
@@ -103,7 +91,6 @@ export default function RoomMeeting(props: {id: string}) {
         }).catch(() => {});
         (async () => {
             await handlePermissions();
-            console.log(granted)
         })();
         clearInterval(window['socketInterval'])
         window['socketInterval'] = setInterval(() => {
@@ -115,24 +102,19 @@ export default function RoomMeeting(props: {id: string}) {
         roomUserClient = [];
         const wsClient = new WebSocket(URL_WEB_SOCKET);
         wsClient.onopen = () => {
-            console.log('Socket opened');
             ws.current = wsClient;
             joinRoom();
             setupDevice();
         };
         wsClient.onclose = () => console.log('ws closed');
         wsClient.onmessage = async (message) => {
-            //console.log('socket got data', message.data);
             const parsedMessage = JSON.parse(message.data);
             switch (parsedMessage.type) {
                 case 'joined': {
                     const newJoinedUserId = parsedMessage.userId;
-                    console.log('parsem msg: ',parsedMessage)
                     const allJoinedUsers = parsedMessage.users.filter(user => user.id !== userId.current);
-                    console.log('my room users', roomUserClient)
                     if (!roomUserClient.length) {
                         roomUserClient = allJoinedUsers.map(user => ({id: user.id, name: user.name, peerConnection: null}));
-                        console.log('adding users', roomUserClient);
                         setRoomUsers(roomUserClient)
                     }
                     if (userId.current === newJoinedUserId)
@@ -147,7 +129,6 @@ export default function RoomMeeting(props: {id: string}) {
                         setRoomUsers([...roomUserClient]);
                     }
                     setTimeout(() => setRoomUsers([...roomUserClient]),500);
-                    console.log(roomUserClient)
                     break;
                 }
                 case 'left': {
@@ -159,31 +140,24 @@ export default function RoomMeeting(props: {id: string}) {
                     leftUser.peerConnection?.close();
                     roomUserClient = roomUserClient.filter(user => user.id !== leftUserId);
                     setRoomUsers([...roomUserClient]);
-                    console.log(`Removed user: ${leftUserId} from Room: ${props.id}`)
                     break;
                 }
                 case 'offer_sdp_received': {
                     const {sdp, userId} = parsedMessage;
-                    console.log('offer sdp back, msg', parsedMessage)
                     const callerUser = roomUserClient.find(user => user.id === userId);
-                    console.log(callerUser);
                     onAnswer(callerUser, sdp);
                     break;
                 }
                 case 'answer_sdp': {
                     const {sdp, userId} = parsedMessage;
-                    console.log('userId', userId, roomUserClient)
                     const user = roomUserClient.find(user => user.id === userId);
-                    console.log('Answer SDP:', sdp);
                     user.peerConnection.setRemoteDescription(sdp);
                     break;
                 }
                 case 'message_received': {
                     const {message, senderId, name} = parsedMessage;
-                    console.log(parsedMessage, 'message received1')
                     if (userId.current === senderId)
                         return;
-                    console.log(parsedMessage, 'message received')
                     setMessages((prevMessages) => [...prevMessages, {message: message, user: {id: senderId, name: name}, date: new Date()}]);
                     break;
                 }
@@ -200,7 +174,6 @@ export default function RoomMeeting(props: {id: string}) {
     }
 
     const sendWSMsg = (data) => {
-        console.log('socket send message', data, 'my id:', userId.current);
         ws.current.send(JSON.stringify({roomId: props.id, userId: userId.current, ...data}));
     };
 
@@ -210,7 +183,6 @@ export default function RoomMeeting(props: {id: string}) {
     async function makeCall(joinedUser: RoomUserClient) {
         joinedUser.peerConnection = new RTCPeerConnection(configuration);
         joinedUser.peerConnection.onicecandidate = (event) => {
-            //console.log('ICE Candidate Offer', event.candidate, joinedUser.peerConnection.localDescription);
 
             if (!event.candidate) {
                 const offer = joinedUser.peerConnection.localDescription;
@@ -228,10 +200,7 @@ export default function RoomMeeting(props: {id: string}) {
     }
 
     const setupDevice = () => {
-        console.log('setupDevice invoked');
         navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then((stream) => {
-            // render local stream on DOM
-            console.log('got user stream')
             const localPlayer = document.getElementById('localPlayer') as HTMLVideoElement;
             localPlayer.srcObject = stream;
             localStream = stream;
@@ -241,12 +210,10 @@ export default function RoomMeeting(props: {id: string}) {
     };
 
     const gotRemoteStream = (event, user: RoomUserClient) => {
-        console.log(`Setting remote stream for ${user.id}`);
         const remotePlayer = document.getElementById(`${user.id}video`);
         if (event.stream) {
             remotePlayer.srcObject = event.stream;
         } else {
-            console.log('too soon, reinvoke');
             setTimeout(() => gotRemoteStream(event, user), 2000);
         }
     };
@@ -256,11 +223,9 @@ export default function RoomMeeting(props: {id: string}) {
     }
 
     const onAnswer = (callerUser: RoomUserClient, sdpOffer) => {
-        console.log('Answering Offer');
 
         callerUser.peerConnection = new RTCPeerConnection(configuration);
         callerUser.peerConnection.onicecandidate = (event) => {
-            //console.log('ICE Candidate Answer', event.candidate, callerUser.peerConnection.localDescription);
             if (!event.candidate) {
                 const answer = callerUser.peerConnection.localDescription;
                 sendWSMsg({type: 'send_answer', sdp: answer, answerToUserId: callerUser.id});

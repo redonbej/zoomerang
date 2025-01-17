@@ -4,18 +4,12 @@ import { CustomError } from "@/lib/CustomError";
 
 export async function GET(req: NextRequest) {
     const code = req.nextUrl.searchParams.get('code');
-    // if (!code) {
-    //     throw new CustomError("Code parameter is missing");
-    // }
     const rooms = await prisma.room.findMany({where: code ? {code: code}: undefined});
     return Response.json({ test: 'test', params: req.nextUrl.searchParams.toString(), rooms: rooms });
 }
 
 export async function POST(req: NextRequest) {
     const creator = req.nextUrl.searchParams.get('creator');
-    // if (!creator) {
-    //     throw new CustomError("Creator parameter is missing");
-    // }
     const room = await prisma.room.create({
         data: {
             code: randomStr(10),

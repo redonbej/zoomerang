@@ -7,11 +7,8 @@ const rooms: Room [] = [];
 const wss = new WebSocketServer({port: 3001});
 const url = `http://localhost:3000/api/room/[:id]/messages`;
 
-console.log('started listening')
 
 wss.on('connection', (socket) => {
-    console.log('A client has connected!');
-
     socket['__uuid'] = uuid();
     socket.on('error', console.error);
     socket.on('message', message => onMessage(wss, socket, message));
@@ -19,7 +16,6 @@ wss.on('connection', (socket) => {
 });
 
 const send = (wsClient, type, body) => {
-    console.log('socket message send [type]',type, '[body]', body);
     wsClient.send(JSON.stringify({
         type,
         ...body,
@@ -27,7 +23,6 @@ const send = (wsClient, type, body) => {
 }
 
 const onMessage = async (wss, socket, message) => {
-    //console.log(`onMessage ${message}`);
     const body = JSON.parse(message)
     const type = body.type
     const roomId = body.roomId
@@ -37,7 +32,6 @@ const onMessage = async (wss, socket, message) => {
 
     switch (type) {
         case WebRTCMessageType.PING: {
-            //console.log('ping')
             break;
         }
         case WebRTCMessageType.Join: {
@@ -53,7 +47,6 @@ const onMessage = async (wss, socket, message) => {
                         name: body.name
                     });
                 }
-                //.filter(user => user.id !== userId)
                 foundRoom.users.forEach(user => {
                     send(user.socket, WebRTCMessageType.Joined, {userId, users: foundRoom.users.map(u => ({id: u.id, name: u.name}))})
                 });
@@ -129,9 +122,7 @@ const onMessage = async (wss, socket, message) => {
                     method: 'POST',
                     body: JSON.stringify({message: message, date: new Date(), user: {id: userId, name: foundRoom.users.find(u => u.id === userId)?.name || 'No Name given'}} as Partial<RoomMessage>)
                 });
-                console.log('response status', response.status);
                 const body = await response.json();
-                console.log('response body', body);
             } catch (e) {
                 console.error(e);
             }
@@ -143,14 +134,11 @@ const onMessage = async (wss, socket, message) => {
     }
 }
 function onClose(wss, socket, message) {
-    console.log('onClose', message);
     for (const room of rooms) {
         const index = room.users.findIndex(user => user.socket['__uuid'] === socket['__uuid']);
         if (index != null) {
-            console.log('removed user', room.users[index]?.id);
             if(room.users[index]?.id)
                 quit(room, room.users[index].id);
-            //room.users.splice(index, 1);
             break;
         }
     }

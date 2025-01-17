@@ -6,7 +6,6 @@ const axiosInstance = axios.create({
 
 
 const requestDecorator = (next) => (config) => {
-    console.log("Request Decorator: Adding Authorization Token");
     const token = localStorage.getItem("token");
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -15,7 +14,6 @@ const requestDecorator = (next) => (config) => {
 };
 
 const responseDecorator = (next) => (response) => {
-    console.log("Response Decorator: Intercepting response");
     return next(response);
 };
 

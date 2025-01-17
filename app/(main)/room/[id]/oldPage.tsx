@@ -14,13 +14,11 @@ export default function Room() {
     useEffect(() => {
         const wsClient = new WebSocket(URL_WEB_SOCKET);
         wsClient.onopen = () => {
-            console.log('ws opened');
             ws.current = wsClient;
             joinRoom();
         };
         wsClient.onclose = () => console.log('ws closed');
         wsClient.onmessage = async (message) => {
-            console.log('socket got data', message, message.data);
             if (message.data.answer) {
                 const remoteDesc = new RTCSessionDescription(message.data.answer);
                 await peerConnection.setRemoteDescription(remoteDesc);
@@ -45,7 +43,6 @@ export default function Room() {
     }, []);
 
     const sendWSMsg = (data) => {
-        console.log('socket send message', data);
         ws.current.send(JSON.stringify({channelName: '1', userId: userId.current, ...data}));
     };
 
@@ -64,9 +61,7 @@ export default function Room() {
     }
 
     const setupDevice = () => {
-        console.log('setupDevice invoked');
         navigator.getUserMedia({ audio: true, video: true }, (stream) => {
-            // render local stream on DOM
             const localPlayer = document.getElementById('localPlayer') as HTMLVideoElement;
             localPlayer.srcObject = stream;
             localStream = stream;
