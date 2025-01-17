@@ -146,7 +146,7 @@ export default function RoomMeeting(props: {id: string}) {
                         makeCall(newUser)
                         setRoomUsers([...roomUserClient]);
                     }
-                    setRoomUsers([...roomUserClient]);
+                    setTimeout(() => setRoomUsers([...roomUserClient]),500);
                     console.log(roomUserClient)
                     break;
                 }
