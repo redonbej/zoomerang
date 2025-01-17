@@ -38,6 +38,30 @@ pnpm dev
 bun dev
 ```
 
+## Run Local Socket Server
+
+```bash
+npm run socket
+```
+
+## Run Everything for the first time
+
+```bash
+npm install
+
+docker compose up
+
+//on a new terminal
+npx prisma db push
+
+//on a new terminal
+npm run socket
+
+//now you can use the app
+npm run dev
+```
+
+
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
